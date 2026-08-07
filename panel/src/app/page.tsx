@@ -5,6 +5,7 @@ import { Header, ThemeOption } from "@/components/Header";
 import { ChatArea, Message } from "@/components/ChatArea";
 import { InputBar } from "@/components/InputBar";
 import { MobileQuickBar } from "@/components/MobileQuickBar";
+import { LockScreen } from "@/components/LockScreen";
 
 const BACKEND_URL = "http://localhost:8000";
 
@@ -15,6 +16,15 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check if PIN was previously saved in localStorage
+  useEffect(() => {
+    const savedAuth = localStorage.getItem("luna_authenticated");
+    if (savedAuth === "true") {
+      setIsAuthenticated(true);
+    }
+  }, []);
 
   // Apply theme data attribute to document root
   useEffect(() => {
@@ -23,6 +33,8 @@ export default function Home() {
 
   // Initialise session & health check
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     const initSession = async () => {
       try {
         const healthRes = await fetch(`${BACKEND_URL}/health`);
@@ -70,7 +82,13 @@ export default function Home() {
     };
 
     initSession();
-  }, []);
+  }, [isAuthenticated]);
+
+  // Handle PIN authentication unlock
+  const handleUnlock = (pin: string) => {
+    localStorage.setItem("luna_authenticated", "true");
+    setIsAuthenticated(true);
+  };
 
   // Handle sending user message to backend
   const handleSendMessage = async (text: string) => {
@@ -137,6 +155,10 @@ export default function Home() {
   const handleVoiceToggle = () => {
     setIsListening((prev) => !prev);
   };
+
+  if (!isAuthenticated) {
+    return <LockScreen onUnlock={handleUnlock} />;
+  }
 
   return (
     <main className="flex flex-col h-screen w-full max-w-[440px] mx-auto border-x border-[var(--border)] bg-[var(--bg)] shadow-2xl overflow-hidden">
