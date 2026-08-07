@@ -369,6 +369,7 @@ TOOL_SCHEMAS = [
 def execute_tool(name: str, arguments: dict[str, Any] | str) -> dict[str, Any]:
     """
     Dispatches execution of a registered tool by name with arguments.
+    Enforces Security & Path Traversal Validation before execution.
     """
     if name not in _TOOL_MAP:
         log.error(f"Unknown tool requested: '{name}'")
@@ -381,6 +382,13 @@ def execute_tool(name: str, arguments: dict[str, Any] | str) -> dict[str, Any]:
             log.error(f"Failed to parse tool arguments for '{name}': {e}")
             return {"status": "error", "message": f"Invalid arguments format: {e}"}
 
+    # Security & Path Traversal Validation Guard
+    from tools.safety import validate_tool_execution
+    safety_check = validate_tool_execution(name, arguments)
+    if not safety_check["allowed"]:
+        log.warning(f"Tool execution blocked by Safety Guard: {safety_check['reason']}")
+        return {"status": "error", "message": safety_check["reason"]}
+
     log.info(f"Executing tool '{name}' with args: {arguments}")
     try:
         handler = _TOOL_MAP[name]
@@ -388,3 +396,4 @@ def execute_tool(name: str, arguments: dict[str, Any] | str) -> dict[str, Any]:
     except Exception as e:
         log.error(f"Execution error in tool '{name}': {e}")
         return {"status": "error", "message": f"Tool execution failed: {str(e)}"}
+

@@ -62,3 +62,18 @@ def test_git_status_tool():
     assert res["status"] == "success"
     assert res["branch"] == "main"
 
+
+def test_safety_guard_path_traversal():
+    from tools.safety import validate_tool_execution
+    # Path traversal attempt outside workspace
+    res = validate_tool_execution("read_file", {"filepath": "C:\\Windows\\System32\\drivers\\etc\\hosts"})
+    assert res["allowed"] is False
+    assert "outside safe workspace" in res["reason"]
+
+
+def test_high_risk_tool_classification():
+    from tools.safety import validate_tool_execution
+    res = validate_tool_execution("send_email", {"to": "test@example.com"})
+    assert res["is_high_risk"] is True
+
+
