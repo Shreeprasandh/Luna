@@ -77,3 +77,15 @@ def test_high_risk_tool_classification():
     assert res["is_high_risk"] is True
 
 
+def test_scheduler_tool():
+    from tools.scheduler import schedule_reminder, list_scheduled_tasks
+    res = schedule_reminder("Test reminder", 100)
+    assert res["status"] == "success"
+    assert "task_id" in res
+
+    tasks_res = list_scheduled_tasks()
+    assert tasks_res["status"] == "success"
+    assert tasks_res["count"] >= 1
+
+
+

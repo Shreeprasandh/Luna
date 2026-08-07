@@ -1,7 +1,8 @@
 """
 Tool Registry — central manager for tool schema definitions and execution dispatch.
 Includes: Web search, Image search, File system, Gmail, Calendar, Browser automation,
-Code execution, Screen Vision inspection, System Hardware monitor, and Autonomous Git agent.
+Code execution, Screen Vision inspection, System Hardware monitor, Autonomous Git agent,
+and Proactive Task Scheduler.
 """
 
 import json
@@ -17,6 +18,7 @@ from tools.code import execute_python_code
 from tools.screen import capture_desktop_screen, analyze_screen_image
 from tools.system import get_system_health
 from tools.git_agent import git_status, git_commit_and_push
+from tools.scheduler import schedule_reminder, list_scheduled_tasks
 
 log = logging.getLogger(__name__)
 
@@ -39,6 +41,8 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "get_system_health": get_system_health,
     "git_status": git_status,
     "git_commit_and_push": git_commit_and_push,
+    "schedule_reminder": schedule_reminder,
+    "list_scheduled_tasks": list_scheduled_tasks,
 }
 
 # OpenAI-compatible function tool definitions
@@ -362,6 +366,39 @@ TOOL_SCHEMAS = [
                 "required": ["commit_message"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "schedule_reminder",
+            "description": "Schedules a timed proactive reminder or notification to trigger after a delay in seconds.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "task_description": {
+                        "type": "string",
+                        "description": "The reminder text or task description."
+                    },
+                    "delay_seconds": {
+                        "type": "integer",
+                        "description": "Time delay in seconds from now before triggering reminder."
+                    }
+                },
+                "required": ["task_description", "delay_seconds"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_scheduled_tasks",
+            "description": "Lists all active background reminders and scheduled tasks.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
     }
 ]
 
@@ -396,4 +433,3 @@ def execute_tool(name: str, arguments: dict[str, Any] | str) -> dict[str, Any]:
     except Exception as e:
         log.error(f"Execution error in tool '{name}': {e}")
         return {"status": "error", "message": f"Tool execution failed: {str(e)}"}
-
