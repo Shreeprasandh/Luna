@@ -14,7 +14,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ onUnlock }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pin === "777777") {
+    if (pin === "100307") {
       onUnlock(pin);
     } else {
       setError(true);

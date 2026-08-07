@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 load_dotenv()
 log = logging.getLogger(__name__)
 
-# Default master access PIN if not set in .env
-DEFAULT_MASTER_PIN = os.getenv("LUNA_MASTER_PIN", "777777")
+# Master access PIN for mobile remote authentication
+DEFAULT_MASTER_PIN = os.getenv("LUNA_MASTER_PIN", "100307")
 
 
 def verify_access_pin(provided_pin: str) -> bool:
