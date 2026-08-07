@@ -1,7 +1,7 @@
 """
 Tool Registry — central manager for tool schema definitions and execution dispatch.
 Includes: Web search, Image search, File system, Gmail, Calendar, Browser automation,
-Code execution, Screen Vision inspection, System Hardware monitor, Autonomous Git agent,
+Code execution, Screen Vision inspection, Pixel Color Inspector, System Hardware monitor, Autonomous Git agent,
 Proactive Task Scheduler, App Launcher, Clipboard Manager, Network Diagnostics,
 System Audio controller, PDF Reader, Fast File Search, Webcam Vision, and Weather.
 """
@@ -16,7 +16,7 @@ from tools.gmail import list_unread_emails, send_email
 from tools.calendar import list_calendar_events, create_calendar_event
 from tools.browser import browse_url, take_screenshot
 from tools.code import execute_python_code
-from tools.screen import capture_desktop_screen, analyze_screen_image
+from tools.screen import capture_desktop_screen, analyze_screen_image, get_screen_pixel_color
 from tools.system import get_system_health
 from tools.git_agent import git_status, git_commit_and_push
 from tools.scheduler import schedule_reminder, list_scheduled_tasks
@@ -47,6 +47,7 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "execute_python_code": execute_python_code,
     "capture_desktop_screen": capture_desktop_screen,
     "analyze_screen_image": analyze_screen_image,
+    "get_screen_pixel_color": get_screen_pixel_color,
     "get_system_health": get_system_health,
     "git_status": git_status,
     "git_commit_and_push": git_commit_and_push,
@@ -334,6 +335,27 @@ TOOL_SCHEMAS = [
                     }
                 },
                 "required": ["image_path"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_screen_pixel_color",
+            "description": "Captures screen and returns the exact Hex color code and RGB values of the pixel at coordinates (x, y).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "x": {
+                        "type": "integer",
+                        "description": "Horizontal X coordinate on screen."
+                    },
+                    "y": {
+                        "type": "integer",
+                        "description": "Vertical Y coordinate on screen."
+                    }
+                },
+                "required": ["x", "y"]
             }
         }
     },

@@ -49,7 +49,6 @@ def capture_desktop_screen(save_path: str = "design/screen_capture.png") -> dict
         }
 
 
-
 def analyze_screen_image(
     image_path: str = "design/screen_capture.png",
     prompt: str = "Describe what is visible on the user's screen in 2-3 clear sentences.",
@@ -83,12 +82,36 @@ def analyze_screen_image(
             }
 
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-2.0-flash")
-
+        vision_models = ["gemini-2.0-flash", "gemini-2.0-flash-lite"]
         image_data = Image.open(abs_image_path)
-        response = model.generate_content([prompt, image_data])
 
-        analysis_text = (response.text or "").strip()
+        analysis_text = None
+        last_err = None
+
+        for model_name in vision_models:
+            for attempt in range(2):
+                try:
+                    model = genai.GenerativeModel(model_name)
+                    response = model.generate_content([prompt, image_data])
+                    if response and response.text:
+                        analysis_text = response.text.strip()
+                        log.info(f"Vision analysis successful using model '{model_name}'.")
+                        break
+                except Exception as err:
+                    last_err = err
+                    if "429" in str(err) and attempt == 0:
+                        import time
+                        time.sleep(2)
+                        continue
+                    log.warning(f"Vision model '{model_name}' failed: {err}. Trying fallback...")
+            if analysis_text:
+                break
+
+        if not analysis_text:
+            return {
+                "status": "error",
+                "message": f"Vision analysis failed across models: {last_err}",
+            }
 
         return {
             "status": "success",
@@ -101,4 +124,44 @@ def analyze_screen_image(
         return {
             "status": "error",
             "message": f"Vision analysis failed: {str(e)}",
+        }
+
+
+def get_screen_pixel_color(x: int = 100, y: int = 100) -> dict[str, Any]:
+    """
+    Captures screen and returns the exact Hex color code and RGB values of the pixel at coordinates (x, y).
+
+    Args:
+        x: Horizontal X coordinate on screen.
+        y: Vertical Y coordinate on screen.
+
+    Returns:
+        Dict with status, hex_color, and rgb values.
+    """
+    log.info(f"[Tool: get_screen_pixel_color] Inspecting pixel at ({x}, {y})...")
+    cap = capture_desktop_screen("design/pixel_inspect.png")
+    if cap.get("status") != "success":
+        return cap
+
+    try:
+        img = Image.open(cap["image_path"])
+        width, height = img.size
+        target_x = max(0, min(width - 1, x))
+        target_y = max(0, min(height - 1, y))
+
+        r, g, b = img.getpixel((target_x, target_y))[:3]
+        hex_code = f"#{r:02x}{g:02x}{b:02x}".upper()
+
+        return {
+            "status": "success",
+            "coordinates": {"x": target_x, "y": target_y},
+            "hex_color": hex_code,
+            "rgb": {"r": r, "g": g, "b": b},
+            "message": f"Pixel color at ({target_x}, {target_y}) is {hex_code} (RGB: {r}, {g}, {b}).",
+        }
+    except Exception as e:
+        log.error(f"[Tool: get_screen_pixel_color] Error: {e}")
+        return {
+            "status": "error",
+            "message": f"Pixel inspection failed: {str(e)}",
         }
