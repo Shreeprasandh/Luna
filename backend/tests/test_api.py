@@ -206,6 +206,14 @@ def test_magic_identity_word():
     assert verify_magic_word("wrong_word") is False
 
 
+def test_mobile_file_download_tool():
+    from tools.files import send_file_to_mobile
+    res = send_file_to_mobile("main.py")
+    assert res["status"] == "success"
+    assert "download_url" in res
+
+
+
 
 
 

@@ -6,18 +6,21 @@ Routes:
   POST /chat          — single conversation turn
   POST /session/start — create a new session
   POST /session/end   — end a session and trigger summarisation
+  GET  /download      — direct file download for mobile remote retrieval
 """
 
 import logging
 import os
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
 from agent.core import start_session, end_session, process_message
 from routes.metrics import router as metrics_router
+from tools.safety import is_safe_path
 
 load_dotenv()
 
@@ -36,13 +39,12 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
-    allow_methods=["GET", "POST"],
+    allow_origin_regex=".*",
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(metrics_router)
-
 
 
 # ─────────────────────────────────────────────────────────────
@@ -57,8 +59,10 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     session_id: str
     text: str
-    type: str = "text"  # "text" | "image" | "code"
+    type: str = "text"  # "text" | "image" | "code" | "download"
     images: list[dict] | None = None
+    download_url: str | None = None
+    file_name: str | None = None
 
 
 class SessionResponse(BaseModel):
@@ -72,6 +76,23 @@ class SessionResponse(BaseModel):
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/download")
+def download_file(filepath: str = Query(..., description="Path to local file")):
+    """
+    Direct File Download Endpoint — Allows mobile phone to download files from laptop.
+    Enforces Path Traversal Protection (`is_safe_path`).
+    """
+    abs_path = os.path.abspath(filepath)
+    if not os.path.exists(abs_path):
+        raise HTTPException(status_code=404, detail=f"File not found: '{filepath}'")
+
+    if not is_safe_path(abs_path):
+        raise HTTPException(status_code=403, detail="Access denied: File outside safe workspace.")
+
+    filename = os.path.basename(abs_path)
+    return FileResponse(path=abs_path, filename=filename, media_type="application/octet-stream")
 
 
 @app.post("/session/start", response_model=SessionResponse)
@@ -106,5 +127,6 @@ def chat_turn(body: ChatRequest):
         text=res.get("text", ""),
         type=res.get("type", "text"),
         images=res.get("images"),
+        download_url=res.get("download_url"),
+        file_name=res.get("file_name"),
     )
-

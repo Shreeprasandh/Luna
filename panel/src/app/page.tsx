@@ -132,6 +132,8 @@ export default function Home() {
           text: payload.text || "",
           type: payload.type || "text",
           images: payload.images || undefined,
+          download_url: payload.download_url || undefined,
+          file_name: payload.file_name || undefined,
           timestamp: new Date().toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",

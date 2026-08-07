@@ -1,8 +1,9 @@
 """
-File System Tools — Safe file inspection, creation, and listing on local machine.
+File System Tools — Safe file inspection, creation, listing, and mobile retrieval on local machine.
 """
 
 import os
+import urllib.parse
 import logging
 from typing import Any
 
@@ -136,3 +137,33 @@ def list_directory(dirpath: str = ".") -> dict[str, Any]:
             "status": "error",
             "message": f"Failed to list directory: {str(e)}",
         }
+
+
+def send_file_to_mobile(filepath: str) -> dict[str, Any]:
+    """
+    Locates a file on the laptop's disk and generates a 1-tap download link for mobile phone retrieval.
+
+    Args:
+        filepath: Path to local file on laptop (e.g. 'design/logo_mark.png' or 'notes.pdf').
+    """
+    clean_path = filepath.strip()
+    abs_path = os.path.abspath(clean_path)
+    log.info(f"[Tool: send_file_to_mobile] Preparing mobile download for: '{abs_path}'")
+
+    if not os.path.exists(abs_path):
+        return {"status": "error", "message": f"File not found: '{filepath}'"}
+
+    if not os.path.isfile(abs_path):
+        return {"status": "error", "message": f"Path is a directory, not a file: '{filepath}'"}
+
+    filename = os.path.basename(abs_path)
+    encoded = urllib.parse.quote(abs_path)
+    download_url = f"/download?filepath={encoded}"
+
+    return {
+        "status": "success",
+        "file_name": filename,
+        "filepath": abs_path,
+        "download_url": download_url,
+        "message": f"Ready to download '{filename}'. Use link: {download_url}",
+    }

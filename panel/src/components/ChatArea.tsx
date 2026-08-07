@@ -2,14 +2,16 @@
 
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon, Download, FileText } from "lucide-react";
 
 export interface Message {
   id: string;
   role: "user" | "assistant";
   text: string;
-  type?: "text" | "image" | "code";
+  type?: "text" | "image" | "code" | "download";
   images?: Array<{ title: string; image_url: string; thumbnail?: string }>;
+  download_url?: string;
+  file_name?: string;
   timestamp: string;
 }
 
@@ -80,6 +82,28 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ messages, isLoading }) => {
                   ))}
                 </div>
               )}
+
+              {/* Render 1-Tap Mobile Download Card if Present */}
+              {msg.download_url && (
+                <div className="mt-3 border-t border-[var(--border)] pt-3">
+                  <a
+                    href={msg.download_url}
+                    download={msg.file_name || "file"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-[var(--surface-alt)] border border-[var(--border-strong)] text-xs text-[var(--text-primary)] hover:border-[var(--accent)] active:scale-98 transition-all"
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <FileText className="w-4 h-4 text-[var(--accent)] flex-shrink-0" />
+                      <span className="truncate font-medium">{msg.file_name || "Download File"}</span>
+                    </div>
+                    <div className="flex items-center gap-1 px-2 py-1 rounded bg-[var(--accent)] text-[var(--bg)] font-semibold text-[11px]">
+                      <Download className="w-3 h-3" />
+                      <span>Download</span>
+                    </div>
+                  </a>
+                </div>
+              )}
             </div>
 
             {/* Timestamp */}
@@ -107,7 +131,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ messages, isLoading }) => {
           </span>
         </motion.div>
       )}
-
 
       <div ref={bottomRef} />
     </div>

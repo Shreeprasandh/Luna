@@ -6,7 +6,8 @@ Proactive Task Scheduler, App Launcher, Clipboard Manager, Network Diagnostics,
 System Audio controller, PDF Reader, Fast File Search, Webcam Vision, Weather, PowerToys Awake,
 Automated File Organizer, Large File Finder, Security Port Scanner,
 Spotify Player & Lyrics, YouTube Player & Control, Canva Design Automator, Window Opacity & Fullscreen Controller,
-System Power Inspector, Clipboard Snippet Stash, Executive Daily Briefing, and Remote Mobile Laptop Control.
+System Power Inspector, Clipboard Snippet Stash, Executive Daily Briefing, Remote Mobile Control,
+and Mobile File Retrieval & Downloader.
 """
 
 import json
@@ -14,7 +15,7 @@ import logging
 from typing import Any, Callable
 
 from tools.search import web_search, image_search
-from tools.files import read_file, write_file, list_directory
+from tools.files import read_file, write_file, list_directory, send_file_to_mobile
 from tools.gmail import list_unread_emails, send_email
 from tools.calendar import list_calendar_events, create_calendar_event
 from tools.browser import browse_url, take_screenshot
@@ -95,6 +96,7 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "generate_morning_briefing": generate_morning_briefing,
     "get_mobile_remote_url": get_mobile_remote_url,
     "execute_remote_laptop_command": execute_remote_laptop_command,
+    "send_file_to_mobile": send_file_to_mobile,
 }
 
 # OpenAI-compatible function tool definitions
@@ -936,6 +938,23 @@ TOOL_SCHEMAS = [
                     }
                 },
                 "required": ["action_type"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "send_file_to_mobile",
+            "description": "Locates a file on the laptop's disk and generates a 1-tap download link for mobile phone retrieval.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filepath": {
+                        "type": "string",
+                        "description": "Path to local file on laptop (e.g. 'design/logo_mark.png' or 'notes.pdf')."
+                    }
+                },
+                "required": ["filepath"]
             }
         }
     }
