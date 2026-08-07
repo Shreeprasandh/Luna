@@ -288,6 +288,17 @@ def test_expansion_batch_suite():
     assert expansion_batch.check_windows_defender_status()["status"] == "success"
 
 
+def test_expansion_batch_2_suite():
+    from tools import expansion_batch_2
+
+    assert expansion_batch_2.convert_video_format("test.mov")["status"] == "success"
+    assert expansion_batch_2.query_wikipedia_summary("AI")["status"] == "success"
+    assert expansion_batch_2.generate_daily_standup_report()["status"] == "success"
+    assert expansion_batch_2.get_public_ip_info()["status"] == "success"
+    assert expansion_batch_2.get_cpu_temperature_metrics()["status"] == "success"
+
+
+
 
 
 

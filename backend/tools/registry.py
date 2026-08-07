@@ -71,7 +71,7 @@ from tools.email_pro import create_email_draft, search_priority_emails
 from tools.cloud_storage import sync_cloud_file
 from tools.messaging import send_webhook_message
 from tools.todo import add_todo_task, list_todo_tasks
-from tools import expansion_batch
+from tools import expansion_batch, expansion_batch_2
 
 log = logging.getLogger(__name__)
 
@@ -193,6 +193,32 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "validate_ssl_certificate": expansion_batch.validate_ssl_certificate,
     "check_windows_defender_status": expansion_batch.check_windows_defender_status,
     "generate_ssh_keypair": expansion_batch.generate_ssh_keypair,
+    # Category 6-10 Expansion Suite Tools
+    "convert_video_format": expansion_batch_2.convert_video_format,
+    "trim_audio_file": expansion_batch_2.trim_audio_file,
+    "generate_presentation_outline": expansion_batch_2.generate_presentation_outline,
+    "generate_meme_image": expansion_batch_2.generate_meme_image,
+    "add_watermark_to_image": expansion_batch_2.add_watermark_to_image,
+    "query_wikipedia_summary": expansion_batch_2.query_wikipedia_summary,
+    "check_web_bookmarks": expansion_batch_2.check_web_bookmarks,
+    "generate_citation_reference": expansion_batch_2.generate_citation_reference,
+    "generate_mindmap_nodes": expansion_batch_2.generate_mindmap_nodes,
+    "analyze_text_sentiment": expansion_batch_2.analyze_text_sentiment,
+    "log_habit_streak": expansion_batch_2.log_habit_streak,
+    "generate_daily_standup_report": expansion_batch_2.generate_daily_standup_report,
+    "convert_timezone_time": expansion_batch_2.convert_timezone_time,
+    "log_expense_item": expansion_batch_2.log_expense_item,
+    "detect_calendar_conflicts": expansion_batch_2.detect_calendar_conflicts,
+    "get_public_ip_info": expansion_batch_2.get_public_ip_info,
+    "query_dns_whois_info": expansion_batch_2.query_dns_whois_info,
+    "upload_file_to_s3": expansion_batch_2.upload_file_to_s3,
+    "probe_web_server_health": expansion_batch_2.probe_web_server_health,
+    "get_bandwidth_usage_metrics": expansion_batch_2.get_bandwidth_usage_metrics,
+    "get_cpu_temperature_metrics": expansion_batch_2.get_cpu_temperature_metrics,
+    "get_gpu_vram_metrics": expansion_batch_2.get_gpu_vram_metrics,
+    "switch_power_performance_plan": expansion_batch_2.switch_power_performance_plan,
+    "get_battery_health_cycles": expansion_batch_2.get_battery_health_cycles,
+    "benchmark_storage_drive_speed": expansion_batch_2.benchmark_storage_drive_speed,
 }
 
 # OpenAI-compatible function tool definitions
