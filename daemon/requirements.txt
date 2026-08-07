@@ -1,0 +1,7 @@
+# Desktop Daemon Dependencies (Voice & Audio)
+pyttsx3==2.98
+sounddevice==0.5.1
+numpy>=1.26.0
+httpx>=0.27.0
+openwakeword==0.6.0
+openai-whisper==20240930
