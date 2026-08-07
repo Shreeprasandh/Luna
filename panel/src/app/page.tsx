@@ -24,8 +24,15 @@ export default function Home() {
   const [isListening, setIsListening] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check if PIN was previously saved in localStorage
+  // Auto-bypass LockScreen for laptop (localhost), enforce PIN for mobile network
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname;
+      if (host === "localhost" || host === "127.0.0.1") {
+        setIsAuthenticated(true);
+        return;
+      }
+    }
     const savedAuth = localStorage.getItem("luna_authenticated");
     if (savedAuth === "true") {
       setIsAuthenticated(true);
