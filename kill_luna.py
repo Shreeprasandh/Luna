@@ -1,6 +1,6 @@
 """
 Luna Local Kill Switch Process Manager
-Safely terminates all local Luna processes (Backend & Desktop Daemon).
+Safely terminates all local Luna processes (Backend, Next.js UI Panel, Desktop Daemon).
 
 Usage:
   python kill_luna.py
@@ -24,29 +24,31 @@ def execute_cmd(cmd: str) -> str:
 
 
 def kill_luna_processes():
-    """Finds and terminates all Luna backend and daemon processes."""
+    """Finds and terminates all Luna backend, panel, and daemon processes."""
     log.info("==========================================")
     log.info("    EXECUTING LUNA KILL SWITCH            ")
     log.info("==========================================")
 
-    # 1. Kill process on Port 8000
+    # 1. Kill process on Port 8000 (Backend) and Port 3000 (Next.js Panel)
     cmd_port = """
-    $conn = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
-    if ($conn) {
-        $conn | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
-        Write-Host "Port 8000 process terminated."
-    } else {
-        Write-Host "Port 8000 is clean."
+    foreach ($port in @(8000, 3000)) {
+        $conn = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
+        if ($conn) {
+            $conn | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
+            Write-Host "Port $port process terminated."
+        } else {
+            Write-Host "Port $port is clean."
+        }
     }
     """
     out_port = execute_cmd(cmd_port)
     log.info(out_port.strip())
 
-    # 2. Kill any lingering uvicorn or daemon python processes
+    # 2. Kill lingering uvicorn, python, or node dev processes
     cmd_proc = """
     Get-Process -Name "uvicorn" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-    Get-Process -Name "python" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*main:app*" -or $_.CommandLine -like "*daemon*" } | Stop-Process -Force -ErrorAction SilentlyContinue
-    Write-Host "Luna python background processes terminated."
+    Get-Process -Name "python" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*main:app*" -or $_.CommandLine -like "*daemon*" -or $_.CommandLine -like "*launch_hud*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+    Write-Host "Luna python and background processes terminated."
     """
     out_proc = execute_cmd(cmd_proc)
     log.info(out_proc.strip())

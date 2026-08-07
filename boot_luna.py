@@ -1,6 +1,6 @@
 """
-Luna One-Command Boot Switch (Local Environment)
-Initialises backend server and voice daemon in synchronized subprocesses.
+Luna One-Command Boot Switch (Full System Stack)
+Initialises backend server, Next.js UI panel, and voice daemon in synchronized subprocesses.
 
 Usage:
   python boot_luna.py
@@ -18,6 +18,7 @@ log = logging.getLogger("LunaBoot")
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 BACKEND_DIR = os.path.join(ROOT_DIR, "backend")
 DAEMON_DIR = os.path.join(ROOT_DIR, "daemon")
+PANEL_DIR = os.path.join(ROOT_DIR, "panel")
 VENV_PYTHON = os.path.join(BACKEND_DIR, "venv", "Scripts", "python.exe")
 
 
@@ -25,7 +26,6 @@ def check_prerequisites():
     """Verifies python environment and .env configuration."""
     if not os.path.exists(VENV_PYTHON):
         log.error(f"Virtual environment python not found at: {VENV_PYTHON}")
-        log.error("Please run environment setup first.")
         sys.exit(1)
 
     env_path = os.path.join(BACKEND_DIR, ".env")
@@ -37,25 +37,35 @@ def check_prerequisites():
 
 
 def boot():
-    """Boots Luna backend and daemon processes."""
+    """Boots Luna backend, Next.js panel, and daemon processes."""
     check_prerequisites()
 
     log.info("==========================================")
-    log.info("        BOOTING LUNA SYSTEM               ")
+    log.info("        BOOTING LUNA SYSTEM STACK         ")
     log.info("==========================================")
 
     # 1. Start FastAPI Backend
-    log.info("Starting Backend Server (port 8000)...")
+    log.info("1/3 Starting Backend Server (http://localhost:8000)...")
     backend_cmd = [VENV_PYTHON, "-m", "uvicorn", "main:app", "--port", "8000"]
     backend_proc = subprocess.Popen(
         backend_cmd,
         cwd=BACKEND_DIR,
         creationflags=subprocess.CREATE_NEW_CONSOLE if os.name == "nt" else 0,
     )
-    time.sleep(3)
+    time.sleep(2)
 
-    # 2. Start Voice Daemon
-    log.info("Starting Desktop Voice Daemon...")
+    # 2. Start Next.js Panel UI
+    log.info("2/3 Starting Next.js Desktop Panel (http://localhost:3000)...")
+    panel_cmd = ["npm.cmd" if os.name == "nt" else "npm", "run", "dev"]
+    panel_proc = subprocess.Popen(
+        panel_cmd,
+        cwd=PANEL_DIR,
+        creationflags=subprocess.CREATE_NEW_CONSOLE if os.name == "nt" else 0,
+    )
+    time.sleep(2)
+
+    # 3. Start Desktop Voice Daemon
+    log.info("3/3 Starting Desktop Voice Daemon...")
     daemon_cmd = [VENV_PYTHON, "main.py"]
     daemon_proc = subprocess.Popen(
         daemon_cmd,
@@ -63,15 +73,22 @@ def boot():
         creationflags=subprocess.CREATE_NEW_CONSOLE if os.name == "nt" else 0,
     )
 
-    log.info("Luna System Online.")
-    log.info("To stop all processes, run: python kill_luna.py")
+    log.info("==========================================")
+    log.info(" Luna System Stack Online.")
+    log.info(" UI Panel:   http://localhost:3000")
+    log.info(" Backend:    http://localhost:8000")
+    log.info(" HUD Window: python launch_hud.py")
+    log.info(" Stop All:   python kill_luna.py")
+    log.info("==========================================")
 
     try:
         backend_proc.wait()
+        panel_proc.wait()
         daemon_proc.wait()
     except KeyboardInterrupt:
         log.info("Boot process interrupted. Shutting down...")
         backend_proc.terminate()
+        panel_proc.terminate()
         daemon_proc.terminate()
 
 

@@ -34,6 +34,8 @@ playwright>=1.49.0
 mss>=10.0.0
 pytest>=8.0.0
 psutil>=7.0.0
+pywebview>=5.0.0
+
 
 
 
