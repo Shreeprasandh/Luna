@@ -5,7 +5,8 @@ Code execution, Screen Vision inspection, Pixel Color Inspector, System Hardware
 Proactive Task Scheduler, App Launcher, Clipboard Manager, Network Diagnostics,
 System Audio controller, PDF Reader, Fast File Search, Webcam Vision, Weather, PowerToys Awake,
 Automated File Organizer, Large File Finder, Security Port Scanner,
-Spotify Player & Lyrics, YouTube Player & Control, Canva Design Automator, and Window Opacity & Fullscreen Controller.
+Spotify Player & Lyrics, YouTube Player & Control, Canva Design Automator, Window Opacity & Fullscreen Controller,
+System Power Inspector, Clipboard Snippet Stash, and Executive Daily Briefing.
 """
 
 import json
@@ -37,6 +38,9 @@ from tools.media import play_spotify_song, get_song_lyrics
 from tools.youtube import play_youtube_video, control_youtube_player
 from tools.canva import open_canva_design
 from tools.window import set_window_opacity, toggle_fullscreen
+from tools.power import get_power_status
+from tools.clipboard_history import stash_clipboard_snippet, list_stashed_snippets
+from tools.briefing import generate_morning_briefing
 
 log = logging.getLogger(__name__)
 
@@ -84,6 +88,10 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "open_canva_design": open_canva_design,
     "set_window_opacity": set_window_opacity,
     "toggle_fullscreen": toggle_fullscreen,
+    "get_power_status": get_power_status,
+    "stash_clipboard_snippet": stash_clipboard_snippet,
+    "list_stashed_snippets": list_stashed_snippets,
+    "generate_morning_briefing": generate_morning_briefing,
 }
 
 # OpenAI-compatible function tool definitions
@@ -831,6 +839,64 @@ TOOL_SCHEMAS = [
                     "enable": {
                         "type": "boolean",
                         "description": "True for fullscreen, False for standard sidepanel window mode."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_power_status",
+            "description": "Inspects laptop battery status, power source, and estimated time remaining.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "stash_clipboard_snippet",
+            "description": "Saves current OS clipboard text under a custom label for future recall.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "label": {
+                        "type": "string",
+                        "description": "Name or label for the snippet."
+                    }
+                },
+                "required": ["label"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_stashed_snippets",
+            "description": "Lists all saved clipboard snippets and labels.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "generate_morning_briefing",
+            "description": "Generates a 3-point executive briefing combining Weather, System Health, Battery Power, and Git Status.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "city": {
+                        "type": "string",
+                        "description": "City for weather report (default 'London')."
                     }
                 },
                 "required": []

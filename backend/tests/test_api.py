@@ -168,6 +168,19 @@ def test_window_opacity_tool():
     assert res["opacity_percent"] == 80
 
 
+def test_power_and_briefing_tools():
+    from tools.power import get_power_status
+    from tools.briefing import generate_morning_briefing
+
+    p_res = get_power_status()
+    assert p_res["status"] == "success"
+
+    b_res = generate_morning_briefing("London")
+    assert b_res["status"] == "success"
+    assert len(b_res["executive_summary_points"]) == 3
+
+
+
 
 
 
