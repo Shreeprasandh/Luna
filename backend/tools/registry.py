@@ -5,7 +5,7 @@ Code execution, Screen Vision inspection, Pixel Color Inspector, System Hardware
 Proactive Task Scheduler, App Launcher, Clipboard Manager, Network Diagnostics,
 System Audio controller, PDF Reader, Fast File Search, Webcam Vision, Weather, PowerToys Awake,
 Automated File Organizer, Large File Finder, Security Port Scanner,
-Spotify Player & Lyrics, YouTube Player & Control, and Canva Design Automator.
+Spotify Player & Lyrics, YouTube Player & Control, Canva Design Automator, and Window Opacity & Fullscreen Controller.
 """
 
 import json
@@ -36,6 +36,7 @@ from tools.port_scanner import get_open_ports
 from tools.media import play_spotify_song, get_song_lyrics
 from tools.youtube import play_youtube_video, control_youtube_player
 from tools.canva import open_canva_design
+from tools.window import set_window_opacity, toggle_fullscreen
 
 log = logging.getLogger(__name__)
 
@@ -81,6 +82,8 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "play_youtube_video": play_youtube_video,
     "control_youtube_player": control_youtube_player,
     "open_canva_design": open_canva_design,
+    "set_window_opacity": set_window_opacity,
+    "toggle_fullscreen": toggle_fullscreen,
 }
 
 # OpenAI-compatible function tool definitions
@@ -797,6 +800,40 @@ TOOL_SCHEMAS = [
                     }
                 },
                 "required": ["design_type", "topic"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "set_window_opacity",
+            "description": "Adjusts the opacity/transparency percentage of Luna's desktop window (e.g. 10%, 50%, 100%).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "opacity_percent": {
+                        "type": "integer",
+                        "description": "Opacity percentage level (10-100)."
+                    }
+                },
+                "required": ["opacity_percent"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "toggle_fullscreen",
+            "description": "Toggles fullscreen mode for Luna's window.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "enable": {
+                        "type": "boolean",
+                        "description": "True for fullscreen, False for standard sidepanel window mode."
+                    }
+                },
+                "required": []
             }
         }
     }

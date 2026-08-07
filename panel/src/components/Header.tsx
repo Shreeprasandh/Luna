@@ -2,7 +2,7 @@
 
 import React from "react";
 import { LogoMark } from "./LogoMark";
-import { Power, Palette } from "lucide-react";
+import { Power, Palette, Music } from "lucide-react";
 
 export type ThemeOption = "dark" | "light" | "nordic" | "sage" | "espresso" | "midnight" | "sandstone";
 
@@ -10,6 +10,7 @@ interface HeaderProps {
   currentTheme: ThemeOption;
   onThemeChange: (theme: ThemeOption) => void;
   isBackendConnected: boolean;
+  activeMedia?: { title: string; type: "music" | "video" } | null;
 }
 
 const THEME_LABELS: Record<ThemeOption, string> = {
@@ -26,6 +27,7 @@ export const Header: React.FC<HeaderProps> = ({
   currentTheme,
   onThemeChange,
   isBackendConnected,
+  activeMedia,
 }) => {
   return (
     <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--surface)] select-none">
@@ -42,8 +44,16 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
+      {/* Currently Playing Media Status Pill */}
+      {activeMedia && (
+        <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[var(--surface-alt)] border border-[var(--border)] text-[11px] text-[var(--text-primary)] animate-pulse">
+          <Music className="w-3 h-3 text-[var(--accent)]" />
+          <span className="truncate max-w-[120px]">{activeMedia.title}</span>
+        </div>
+      )}
+
       {/* Controls */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         {/* Theme Selector Dropdown */}
         <div className="relative flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md bg-[var(--bg)] border border-[var(--border)]">
           <Palette className="w-3.5 h-3.5 text-[var(--accent)]" />
@@ -74,7 +84,6 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           />
         </div>
-
       </div>
     </header>
   );

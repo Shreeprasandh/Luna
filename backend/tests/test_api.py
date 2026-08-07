@@ -161,6 +161,14 @@ def test_spotify_youtube_canva_tools():
     assert canva_res["status"] == "success"
 
 
+def test_window_opacity_tool():
+    from tools.window import set_window_opacity
+    res = set_window_opacity(80)
+    assert res["status"] == "success"
+    assert res["opacity_percent"] == 80
+
+
+
 
 
 
