@@ -7,7 +7,13 @@ import { InputBar } from "@/components/InputBar";
 import { MobileQuickBar } from "@/components/MobileQuickBar";
 import { LockScreen } from "@/components/LockScreen";
 
-const BACKEND_URL = "http://localhost:8000";
+const getBackendUrl = () => {
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname || "localhost";
+    return `http://${host}:8000`;
+  }
+  return "http://localhost:8000";
+};
 
 export default function Home() {
   const [theme, setTheme] = useState<ThemeOption>("dark");
@@ -36,13 +42,14 @@ export default function Home() {
     if (!isAuthenticated) return;
 
     const initSession = async () => {
+      const backendUrl = getBackendUrl();
       try {
-        const healthRes = await fetch(`${BACKEND_URL}/health`);
+        const healthRes = await fetch(`${backendUrl}/health`);
         if (healthRes.ok) {
           setIsBackendConnected(true);
         }
 
-        const sessionRes = await fetch(`${BACKEND_URL}/session/start`, {
+        const sessionRes = await fetch(`${backendUrl}/session/start`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
         });
@@ -110,7 +117,8 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${BACKEND_URL}/chat`, {
+      const backendUrl = getBackendUrl();
+      const res = await fetch(`${backendUrl}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ session_id: sessionId, text }),
