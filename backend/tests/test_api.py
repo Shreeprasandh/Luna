@@ -276,6 +276,19 @@ def test_external_integrations():
     assert list_todo_tasks()["status"] == "success"
 
 
+def test_expansion_batch_suite():
+    from tools import expansion_batch
+
+    assert expansion_batch.get_virtual_desktop_status()["status"] == "success"
+    assert expansion_batch.flush_ram_cache()["status"] == "success"
+    assert expansion_batch.extract_ocr_text("test.png")["status"] == "success"
+    assert expansion_batch.get_docker_containers()["status"] == "success"
+    assert expansion_batch.push_mobile_notification("Alert", "Body")["status"] == "success"
+    assert expansion_batch.generate_secure_password()["status"] == "success"
+    assert expansion_batch.check_windows_defender_status()["status"] == "success"
+
+
+
 
 
 

@@ -71,6 +71,7 @@ from tools.email_pro import create_email_draft, search_priority_emails
 from tools.cloud_storage import sync_cloud_file
 from tools.messaging import send_webhook_message
 from tools.todo import add_todo_task, list_todo_tasks
+from tools import expansion_batch
 
 log = logging.getLogger(__name__)
 
@@ -153,6 +154,45 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "send_webhook_message": send_webhook_message,
     "add_todo_task": add_todo_task,
     "list_todo_tasks": list_todo_tasks,
+    # Category 1-5 Expansion Suite Tools
+    "get_virtual_desktop_status": expansion_batch.get_virtual_desktop_status,
+    "set_process_priority": expansion_batch.set_process_priority,
+    "query_windows_registry": expansion_batch.query_windows_registry,
+    "list_startup_applications": expansion_batch.list_startup_applications,
+    "get_disk_smart_metrics": expansion_batch.get_disk_smart_metrics,
+    "flush_ram_cache": expansion_batch.flush_ram_cache,
+    "get_bluetooth_devices": expansion_batch.get_bluetooth_devices,
+    "set_display_brightness": expansion_batch.set_display_brightness,
+    "get_system_uptime": expansion_batch.get_system_uptime,
+    "trigger_keyboard_shortcut": expansion_batch.trigger_keyboard_shortcut,
+    "extract_ocr_text": expansion_batch.extract_ocr_text,
+    "scan_qr_code": expansion_batch.scan_qr_code,
+    "remove_image_background": expansion_batch.remove_image_background,
+    "extract_color_palette": expansion_batch.extract_color_palette,
+    "upscale_image_resolution": expansion_batch.upscale_image_resolution,
+    "detect_faces_in_image": expansion_batch.detect_faces_in_image,
+    "extract_video_frames": expansion_batch.extract_video_frames,
+    "convert_text_to_audio_speech": expansion_batch.convert_text_to_audio_speech,
+    "get_docker_containers": expansion_batch.get_docker_containers,
+    "run_sql_query": expansion_batch.run_sql_query,
+    "test_rest_api_endpoint": expansion_batch.test_rest_api_endpoint,
+    "format_code_snippet": expansion_batch.format_code_snippet,
+    "audit_dependencies_vulnerabilities": expansion_batch.audit_dependencies_vulnerabilities,
+    "run_automated_unit_tests": expansion_batch.run_automated_unit_tests,
+    "validate_json_schema": expansion_batch.validate_json_schema,
+    "test_regex_pattern": expansion_batch.test_regex_pattern,
+    "push_mobile_notification": expansion_batch.push_mobile_notification,
+    "sync_mobile_clipboard": expansion_batch.sync_mobile_clipboard,
+    "get_mobile_telemetry_status": expansion_batch.get_mobile_telemetry_status,
+    "trigger_remote_camera_preview": expansion_batch.trigger_remote_camera_preview,
+    "send_mobile_location_ping": expansion_batch.send_mobile_location_ping,
+    "shred_file_securely": expansion_batch.shred_file_securely,
+    "encrypt_file_aes256": expansion_batch.encrypt_file_aes256,
+    "decrypt_file_aes256": expansion_batch.decrypt_file_aes256,
+    "generate_secure_password": expansion_batch.generate_secure_password,
+    "validate_ssl_certificate": expansion_batch.validate_ssl_certificate,
+    "check_windows_defender_status": expansion_batch.check_windows_defender_status,
+    "generate_ssh_keypair": expansion_batch.generate_ssh_keypair,
 }
 
 # OpenAI-compatible function tool definitions
