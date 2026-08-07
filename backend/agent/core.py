@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 
 from agent.persona import build_system_prompt
 from agent.llm import chat
+from agent.summarizer import summarize_session
 
 load_dotenv()
 log = logging.getLogger(__name__)
@@ -42,9 +43,23 @@ def start_session() -> str:
 
 
 def end_session(session_id: str) -> None:
-    """Ends the session and cleans up working memory."""
+    """
+    Ends the session, runs the summarizer to extract memories,
+    then cleans up working memory.
+    """
+    messages = _sessions.get(session_id, [])
+
+    if messages:
+        # Run summarizer in a fire-and-forget manner
+        # Failures here are logged but never surface to the user
+        try:
+            summarize_session(session_id, messages)
+        except Exception as e:
+            log.error(f"Summarizer failed for session {session_id}: {e}")
+
     if session_id in _sessions:
         del _sessions[session_id]
+
     log.info(f"Session ended: {session_id}")
 
 
