@@ -11,7 +11,8 @@ Mobile File Retrieval, Workspace Layout Snap, Multi-Item Clipboard Vault, Proces
 File Zipper Archive, Smart Playlist Generator, Code Refactoring & Lint Auditor, GitHub Repository Tracker,
 Environment Secret Vault, Webcam Security Motion Alarm, Wi-Fi Device Intrusion Scanner,
 Voice Settings, Book Summarizer, Financial Quotes, Tech News Digest, Screen Region Crop, Focus Shield,
-Junk File Cleaner, and Network Speedtest.
+Junk File Cleaner, Network Speedtest, Markdown Notes Vault, Email Drafts, Cloud Storage Sync,
+Discord/Slack Webhooks, and Todo Task Manager.
 """
 
 import json
@@ -65,6 +66,11 @@ from tools.screen_crop import crop_screen_region
 from tools.focus_mode import toggle_focus_shield
 from tools.junk_cleaner import clean_junk_files
 from tools.speedtest import run_network_speedtest
+from tools.notes import create_markdown_note, search_markdown_notes
+from tools.email_pro import create_email_draft, search_priority_emails
+from tools.cloud_storage import sync_cloud_file
+from tools.messaging import send_webhook_message
+from tools.todo import add_todo_task, list_todo_tasks
 
 log = logging.getLogger(__name__)
 
@@ -139,6 +145,14 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "toggle_focus_shield": toggle_focus_shield,
     "clean_junk_files": clean_junk_files,
     "run_network_speedtest": run_network_speedtest,
+    "create_markdown_note": create_markdown_note,
+    "search_markdown_notes": search_markdown_notes,
+    "create_email_draft": create_email_draft,
+    "search_priority_emails": search_priority_emails,
+    "sync_cloud_file": sync_cloud_file,
+    "send_webhook_message": send_webhook_message,
+    "add_todo_task": add_todo_task,
+    "list_todo_tasks": list_todo_tasks,
 }
 
 # OpenAI-compatible function tool definitions
@@ -1206,18 +1220,9 @@ TOOL_SCHEMAS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "rate": {
-                        "type": "integer",
-                        "description": "Speech rate in words per minute (default 175)."
-                    },
-                    "pitch": {
-                        "type": "integer",
-                        "description": "Pitch percentage (0-100)."
-                    },
-                    "voice_gender": {
-                        "type": "string",
-                        "description": "Voice gender ('female' or 'male')."
-                    }
+                    "rate": { "type": "integer" },
+                    "pitch": { "type": "integer" },
+                    "voice_gender": { "type": "string" }
                 },
                 "required": []
             }
@@ -1231,14 +1236,8 @@ TOOL_SCHEMAS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "filepath": {
-                        "type": "string",
-                        "description": "Path to local PDF file."
-                    },
-                    "max_pages": {
-                        "type": "integer",
-                        "description": "Maximum pages to read (default 50)."
-                    }
+                    "filepath": { "type": "string" },
+                    "max_pages": { "type": "integer" }
                 },
                 "required": ["filepath"]
             }
@@ -1252,10 +1251,7 @@ TOOL_SCHEMAS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "symbol": {
-                        "type": "string",
-                        "description": "Ticker symbol (e.g. 'BTC', 'ETH', 'AAPL', 'NVDA')."
-                    }
+                    "symbol": { "type": "string" }
                 },
                 "required": ["symbol"]
             }
@@ -1269,10 +1265,7 @@ TOOL_SCHEMAS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "topic": {
-                        "type": "string",
-                        "description": "News topic (default 'technology')."
-                    }
+                    "topic": { "type": "string" }
                 },
                 "required": []
             }
@@ -1329,6 +1322,124 @@ TOOL_SCHEMAS = [
         "function": {
             "name": "run_network_speedtest",
             "description": "Measures network ping latency, packet stability, and internet connection health.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "create_markdown_note",
+            "description": "Creates or appends to a local Markdown note file.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": { "type": "string" },
+                    "content": { "type": "string" },
+                    "folder": { "type": "string" }
+                },
+                "required": ["title", "content"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_markdown_notes",
+            "description": "Searches local Markdown notes folder for a keyword query.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": { "type": "string" },
+                    "folder": { "type": "string" }
+                },
+                "required": ["query"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "create_email_draft",
+            "description": "Creates and stores an email draft for review before sending.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "to": { "type": "string" },
+                    "subject": { "type": "string" },
+                    "body": { "type": "string" }
+                },
+                "required": ["to", "subject", "body"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_priority_emails",
+            "description": "Searches recent unread inbox emails matching sender or keyword.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "sender_or_keyword": { "type": "string" }
+                },
+                "required": ["sender_or_keyword"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "sync_cloud_file",
+            "description": "Syncs a local file to the local Cloud Drive sync folder.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filepath": { "type": "string" },
+                    "destination_folder": { "type": "string" }
+                },
+                "required": ["filepath"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "send_webhook_message",
+            "description": "Sends an automated notification message to a Discord or Slack webhook URL.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "webhook_url": { "type": "string" },
+                    "message": { "type": "string" }
+                },
+                "required": ["webhook_url", "message"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "add_todo_task",
+            "description": "Adds a checkable task item to your daily to-do list.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": { "type": "string" },
+                    "due_date": { "type": "string" }
+                },
+                "required": ["title"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_todo_tasks",
+            "description": "Retrieves active to-do list tasks.",
             "parameters": {
                 "type": "object",
                 "properties": {},

@@ -261,6 +261,22 @@ def test_wakeword_and_next_tier_tools():
     assert run_network_speedtest()["status"] == "success"
 
 
+def test_external_integrations():
+    from tools.notes import create_markdown_note, search_markdown_notes
+    from tools.email_pro import create_email_draft, search_priority_emails
+    from tools.cloud_storage import sync_cloud_file
+    from tools.todo import add_todo_task, list_todo_tasks
+
+    assert create_markdown_note("test_note", "test content")["status"] == "success"
+    assert search_markdown_notes("test")["status"] == "success"
+    assert create_email_draft("sir@example.com", "Test Subject", "Body")["status"] == "success"
+    assert search_priority_emails("test")["status"] == "success"
+    assert sync_cloud_file("main.py")["status"] == "success"
+    assert add_todo_task("Build Luna Feature")["status"] == "success"
+    assert list_todo_tasks()["status"] == "success"
+
+
+
 
 
 
