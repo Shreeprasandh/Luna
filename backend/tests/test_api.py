@@ -187,6 +187,20 @@ def test_remote_mobile_tool():
     assert "mobile_panel_url" in res
 
 
+def test_extreme_risk_password_guard():
+    from tools.safety import validate_tool_execution
+
+    # Test without password -> BLOCKED
+    res1 = validate_tool_execution("write_file", {"filepath": "test.txt", "content": "delete_drive format_c"})
+    assert res1["allowed"] is False
+    assert "ONE PIECE" in res1["reason"]
+
+    # Test with correct password -> ALLOWED
+    res2 = validate_tool_execution("write_file", {"filepath": "test.txt", "content": "delete_drive format_c", "password": "ONE PIECE"})
+    assert res2["allowed"] is True
+
+
+
 
 
 
