@@ -6,7 +6,7 @@ Proactive Task Scheduler, App Launcher, Clipboard Manager, Network Diagnostics,
 System Audio controller, PDF Reader, Fast File Search, Webcam Vision, Weather, PowerToys Awake,
 Automated File Organizer, Large File Finder, Security Port Scanner,
 Spotify Player & Lyrics, YouTube Player & Control, Canva Design Automator, Window Opacity & Fullscreen Controller,
-System Power Inspector, Clipboard Snippet Stash, and Executive Daily Briefing.
+System Power Inspector, Clipboard Snippet Stash, Executive Daily Briefing, and Remote Mobile Laptop Control.
 """
 
 import json
@@ -41,6 +41,7 @@ from tools.window import set_window_opacity, toggle_fullscreen
 from tools.power import get_power_status
 from tools.clipboard_history import stash_clipboard_snippet, list_stashed_snippets
 from tools.briefing import generate_morning_briefing
+from tools.remote_mobile import get_mobile_remote_url, execute_remote_laptop_command
 
 log = logging.getLogger(__name__)
 
@@ -92,6 +93,8 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "stash_clipboard_snippet": stash_clipboard_snippet,
     "list_stashed_snippets": list_stashed_snippets,
     "generate_morning_briefing": generate_morning_briefing,
+    "get_mobile_remote_url": get_mobile_remote_url,
+    "execute_remote_laptop_command": execute_remote_laptop_command,
 }
 
 # OpenAI-compatible function tool definitions
@@ -900,6 +903,39 @@ TOOL_SCHEMAS = [
                     }
                 },
                 "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_mobile_remote_url",
+            "description": "Returns the local network IP address and URL to access Luna's panel from your mobile phone on Wi-Fi.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "execute_remote_laptop_command",
+            "description": "Executes a remote laptop command triggered from mobile (e.g. launch VS Code, create project folder, open terminal, play song).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "action_type": {
+                        "type": "string",
+                        "description": "Action type ('create_project_folder', 'launch_vscode', 'open_terminal', 'play_music')."
+                    },
+                    "target_name": {
+                        "type": "string",
+                        "description": "Project folder name or song title."
+                    }
+                },
+                "required": ["action_type"]
             }
         }
     }

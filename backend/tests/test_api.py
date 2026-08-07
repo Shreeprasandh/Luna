@@ -180,6 +180,14 @@ def test_power_and_briefing_tools():
     assert len(b_res["executive_summary_points"]) == 3
 
 
+def test_remote_mobile_tool():
+    from tools.remote_mobile import get_mobile_remote_url
+    res = get_mobile_remote_url()
+    assert res["status"] == "success"
+    assert "mobile_panel_url" in res
+
+
+
 
 
 
