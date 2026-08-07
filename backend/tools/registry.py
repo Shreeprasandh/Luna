@@ -7,7 +7,9 @@ System Audio controller, PDF Reader, Fast File Search, Webcam Vision, Weather, P
 Automated File Organizer, Large File Finder, Security Port Scanner,
 Spotify Player & Lyrics, YouTube Player & Control, Canva Design Automator, Window Opacity & Fullscreen Controller,
 System Power Inspector, Clipboard Snippet Stash, Executive Daily Briefing, Remote Mobile Control,
-and Mobile File Retrieval & Downloader.
+Mobile File Retrieval, Workspace Layout Snap, Multi-Item Clipboard Vault, Process Manager & Kill Switch,
+File Zipper Archive, Smart Playlist Generator, Code Refactoring & Lint Auditor, GitHub Repository Tracker,
+Environment Secret Vault, Webcam Security Motion Alarm, and Wi-Fi Device Intrusion Scanner.
 """
 
 import json
@@ -43,6 +45,16 @@ from tools.power import get_power_status
 from tools.clipboard_history import stash_clipboard_snippet, list_stashed_snippets
 from tools.briefing import generate_morning_briefing
 from tools.remote_mobile import get_mobile_remote_url, execute_remote_laptop_command
+from tools.layout import setup_workspace_preset
+from tools.clipboard_vault import push_to_clipboard_vault, get_clipboard_vault_history
+from tools.process_manager import list_top_processes, terminate_process_by_name
+from tools.archive import zip_directory
+from tools.playlist import generate_smart_playlist
+from tools.code_auditor import audit_code_file
+from tools.github_tracker import track_github_repository
+from tools.env_vault import generate_env_vault_template
+from tools.webcam_alarm import check_webcam_motion_alarm
+from tools.wifi_scanner import scan_wifi_devices
 
 log = logging.getLogger(__name__)
 
@@ -97,6 +109,18 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "get_mobile_remote_url": get_mobile_remote_url,
     "execute_remote_laptop_command": execute_remote_laptop_command,
     "send_file_to_mobile": send_file_to_mobile,
+    "setup_workspace_preset": setup_workspace_preset,
+    "push_to_clipboard_vault": push_to_clipboard_vault,
+    "get_clipboard_vault_history": get_clipboard_vault_history,
+    "list_top_processes": list_top_processes,
+    "terminate_process_by_name": terminate_process_by_name,
+    "zip_directory": zip_directory,
+    "generate_smart_playlist": generate_smart_playlist,
+    "audit_code_file": audit_code_file,
+    "track_github_repository": track_github_repository,
+    "generate_env_vault_template": generate_env_vault_template,
+    "check_webcam_motion_alarm": check_webcam_motion_alarm,
+    "scan_wifi_devices": scan_wifi_devices,
 }
 
 # OpenAI-compatible function tool definitions
@@ -955,6 +979,204 @@ TOOL_SCHEMAS = [
                     }
                 },
                 "required": ["filepath"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "setup_workspace_preset",
+            "description": "Launches applications and arranges workspace layout (e.g. 'coding', 'research', 'media').",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "preset_name": {
+                        "type": "string",
+                        "description": "Preset type ('coding', 'research', 'media')."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "push_to_clipboard_vault",
+            "description": "Pushes text into the multi-item clipboard vault history.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "description": "Snippet text to store."
+                    }
+                },
+                "required": ["text"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_clipboard_vault_history",
+            "description": "Retrieves stored clipboard vault items.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_top_processes",
+            "description": "Lists top background processes consuming CPU and memory.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "limit": {
+                        "type": "integer",
+                        "description": "Max processes to list (default 10)."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "terminate_process_by_name",
+            "description": "Terminates background process by executable name (e.g. 'notepad.exe', 'calculator.exe').",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "process_name": {
+                        "type": "string",
+                        "description": "Process executable name to terminate."
+                    }
+                },
+                "required": ["process_name"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "zip_directory",
+            "description": "Compresses a directory into a .zip archive.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "source_dir": {
+                        "type": "string",
+                        "description": "Directory path to compress (default '.')."
+                    },
+                    "output_filename": {
+                        "type": "string",
+                        "description": "Output archive file name (default 'archive.zip')."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "generate_smart_playlist",
+            "description": "Generates and plays a music playlist tailored to your mood ('focus', 'coding', 'chill', 'workout').",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "mood": {
+                        "type": "string",
+                        "description": "Mood type ('focus', 'coding', 'chill', 'workout')."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "audit_code_file",
+            "description": "Audits a Python or text code file for syntax errors, line count, and structural health.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filepath": {
+                        "type": "string",
+                        "description": "Path to code file to inspect."
+                    }
+                },
+                "required": ["filepath"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "track_github_repository",
+            "description": "Inspects GitHub repository status, active branch, and modified files.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "repo_name": {
+                        "type": "string",
+                        "description": "GitHub repository owner/name (default 'Shreeprasandh/Luna')."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "generate_env_vault_template",
+            "description": "Generates a secure .env.example environment secret vault template file.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "save_path": {
+                        "type": "string",
+                        "description": "Destination file path (default '.env.example')."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "check_webcam_motion_alarm",
+            "description": "Captures a webcam frame snapshot to monitor room security while away.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "save_path": {
+                        "type": "string",
+                        "description": "Destination file path (default 'design/motion_alarm.png')."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "scan_wifi_devices",
+            "description": "Scans local Wi-Fi network ARP table to inspect connected IP addresses and MAC addresses.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
             }
         }
     }

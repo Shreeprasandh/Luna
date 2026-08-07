@@ -215,9 +215,31 @@ def test_mobile_file_download_tool():
 
 def test_api_quota_exhaustion_fallback():
     from agent.llm import chat
-    # Test chat call with empty messages list -> triggers fallback response gracefully without crashing
     res = chat([{"role": "user", "content": "hello"}], with_tools=False)
     assert isinstance(res, (dict, str))
+
+
+def test_expansion_tools():
+    from tools.layout import setup_workspace_preset
+    from tools.clipboard_vault import push_to_clipboard_vault
+    from tools.process_manager import list_top_processes
+    from tools.archive import zip_directory
+    from tools.playlist import generate_smart_playlist
+    from tools.code_auditor import audit_code_file
+    from tools.github_tracker import track_github_repository
+    from tools.env_vault import generate_env_vault_template
+    from tools.wifi_scanner import scan_wifi_devices
+
+    assert setup_workspace_preset("coding")["status"] == "success"
+    assert push_to_clipboard_vault("test snippet")["status"] == "success"
+    assert list_top_processes()["status"] == "success"
+    assert zip_directory("tools", "test_archive.zip")["status"] == "success"
+    assert generate_smart_playlist("focus")["status"] == "success"
+    assert audit_code_file("main.py")["status"] == "success"
+    assert track_github_repository()["status"] == "success"
+    assert generate_env_vault_template("test_env.example")["status"] == "success"
+    assert scan_wifi_devices()["status"] == "success"
+
 
 
 
