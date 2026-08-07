@@ -1,6 +1,6 @@
 """
 Luna One-Command Boot Switch (Full System Stack)
-Initialises backend server, Next.js UI panel, voice daemon, and floating desktop HUD orb.
+Initialises backend server, Next.js UI panel, voice daemon, and native Windows desktop floating glass orb.
 
 Usage:
   python boot_luna.py
@@ -37,7 +37,7 @@ def check_prerequisites():
 
 
 def boot():
-    """Boots Luna backend, Next.js panel, daemon, and HUD window."""
+    """Boots Luna backend, Next.js panel, daemon, and native desktop orb."""
     check_prerequisites()
 
     log.info("==========================================")
@@ -74,19 +74,20 @@ def boot():
     )
     time.sleep(1)
 
-    # 4. Launch Desktop Floating HUD Orb Window
-    log.info("4/4 Launching Floating Desktop HUD Orb Window...")
-    hud_cmd = [VENV_PYTHON, "launch_hud.py"]
-    hud_proc = subprocess.Popen(
-        hud_cmd,
+    # 4. Launch Native Windows Desktop Floating Glass Orb
+    log.info("4/4 Launching Native Windows Desktop Floating Glass Orb Widget...")
+    orb_cmd = [VENV_PYTHON, "desktop_orb.py"]
+    orb_proc = subprocess.Popen(
+        orb_cmd,
         cwd=ROOT_DIR,
         creationflags=subprocess.CREATE_NEW_CONSOLE if os.name == "nt" else 0,
     )
 
     log.info("==========================================")
-    log.info(" Luna System Stack & HUD Orb Online.")
+    log.info(" Luna System Stack & Native Desktop Orb Online.")
     log.info(" UI Panel:   http://localhost:3000")
     log.info(" Backend:    http://localhost:8000")
+    log.info(" Desktop Orb: Positioned at bottom-right corner")
     log.info(" Stop All:   python kill_luna.py")
     log.info("==========================================")
 
@@ -94,13 +95,13 @@ def boot():
         backend_proc.wait()
         panel_proc.wait()
         daemon_proc.wait()
-        hud_proc.wait()
+        orb_proc.wait()
     except KeyboardInterrupt:
         log.info("Boot process interrupted. Shutting down...")
         backend_proc.terminate()
         panel_proc.terminate()
         daemon_proc.terminate()
-        hud_proc.terminate()
+        orb_proc.terminate()
 
 
 if __name__ == "__main__":
