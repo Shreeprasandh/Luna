@@ -1,0 +1,51 @@
+# Environment & secrets — NEVER commit these
+.env
+.env.local
+.env.production
+*.env
+
+# Google OAuth token — generated on first auth run
+token.json
+google_credentials.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Node
+node_modules/
+.next/
+out/
+.turbo/
+
+# Models — large binary files
+daemon/models/*.onnx
+daemon/models/*.pt
+daemon/models/*.bin
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Docker
+*.tar
