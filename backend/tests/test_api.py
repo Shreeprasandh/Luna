@@ -88,4 +88,22 @@ def test_scheduler_tool():
     assert tasks_res["count"] >= 1
 
 
+def test_clipboard_tools():
+    from tools.clipboard import set_clipboard_text, get_clipboard_text
+    set_res = set_clipboard_text("Luna Test Clipboard")
+    assert set_res["status"] == "success"
+
+    get_res = get_clipboard_text()
+    assert get_res["status"] == "success"
+    assert get_res["content"] == "Luna Test Clipboard"
+
+
+def test_network_tool():
+    from tools.network import get_network_diagnostics
+    res = get_network_diagnostics()
+    assert res["status"] == "success"
+    assert "local_ip" in res
+
+
+
 

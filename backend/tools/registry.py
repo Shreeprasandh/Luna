@@ -2,7 +2,7 @@
 Tool Registry — central manager for tool schema definitions and execution dispatch.
 Includes: Web search, Image search, File system, Gmail, Calendar, Browser automation,
 Code execution, Screen Vision inspection, System Hardware monitor, Autonomous Git agent,
-and Proactive Task Scheduler.
+Proactive Task Scheduler, App Launcher, Clipboard Manager, and Network Diagnostics.
 """
 
 import json
@@ -19,6 +19,9 @@ from tools.screen import capture_desktop_screen, analyze_screen_image
 from tools.system import get_system_health
 from tools.git_agent import git_status, git_commit_and_push
 from tools.scheduler import schedule_reminder, list_scheduled_tasks
+from tools.app_launcher import launch_app, open_url_in_browser
+from tools.clipboard import get_clipboard_text, set_clipboard_text
+from tools.network import get_network_diagnostics
 
 log = logging.getLogger(__name__)
 
@@ -43,6 +46,11 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "git_commit_and_push": git_commit_and_push,
     "schedule_reminder": schedule_reminder,
     "list_scheduled_tasks": list_scheduled_tasks,
+    "launch_app": launch_app,
+    "open_url_in_browser": open_url_in_browser,
+    "get_clipboard_text": get_clipboard_text,
+    "set_clipboard_text": set_clipboard_text,
+    "get_network_diagnostics": get_network_diagnostics,
 }
 
 # OpenAI-compatible function tool definitions
@@ -393,6 +401,81 @@ TOOL_SCHEMAS = [
         "function": {
             "name": "list_scheduled_tasks",
             "description": "Lists all active background reminders and scheduled tasks.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "launch_app",
+            "description": "Launches a desktop application by name (e.g. 'code', 'chrome', 'notepad', 'calculator', 'spotify').",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "app_name": {
+                        "type": "string",
+                        "description": "The application name to launch."
+                    }
+                },
+                "required": ["app_name"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "open_url_in_browser",
+            "description": "Opens a website URL in the user's default desktop browser.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "The website URL to open."
+                    }
+                },
+                "required": ["url"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_clipboard_text",
+            "description": "Reads text content currently stored on the user's OS clipboard.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "set_clipboard_text",
+            "description": "Copies text content to the user's OS clipboard.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "description": "Text content to copy to clipboard."
+                    }
+                },
+                "required": ["text"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_network_diagnostics",
+            "description": "Inspects local IP address, hostname, and tests internet ping latency.",
             "parameters": {
                 "type": "object",
                 "properties": {},
