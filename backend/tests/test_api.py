@@ -105,5 +105,19 @@ def test_network_tool():
     assert "local_ip" in res
 
 
+def test_file_search_tool():
+    from tools.file_search import search_local_files
+    res = search_local_files("*.py", search_dir="tools")
+    assert res["status"] == "success"
+    assert res["match_count"] > 0
+
+
+def test_audio_tools():
+    from tools.audio import set_master_volume
+    res = set_master_volume(50)
+    assert res["status"] == "success"
+
+
+
 
 

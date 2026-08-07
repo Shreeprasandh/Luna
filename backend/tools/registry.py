@@ -2,7 +2,8 @@
 Tool Registry — central manager for tool schema definitions and execution dispatch.
 Includes: Web search, Image search, File system, Gmail, Calendar, Browser automation,
 Code execution, Screen Vision inspection, System Hardware monitor, Autonomous Git agent,
-Proactive Task Scheduler, App Launcher, Clipboard Manager, and Network Diagnostics.
+Proactive Task Scheduler, App Launcher, Clipboard Manager, Network Diagnostics,
+System Audio controller, PDF Reader, and Fast File Search.
 """
 
 import json
@@ -22,6 +23,9 @@ from tools.scheduler import schedule_reminder, list_scheduled_tasks
 from tools.app_launcher import launch_app, open_url_in_browser
 from tools.clipboard import get_clipboard_text, set_clipboard_text
 from tools.network import get_network_diagnostics
+from tools.audio import set_master_volume, mute_master_volume
+from tools.pdf_reader import read_pdf_file
+from tools.file_search import search_local_files
 
 log = logging.getLogger(__name__)
 
@@ -51,6 +55,10 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "get_clipboard_text": get_clipboard_text,
     "set_clipboard_text": set_clipboard_text,
     "get_network_diagnostics": get_network_diagnostics,
+    "set_master_volume": set_master_volume,
+    "mute_master_volume": mute_master_volume,
+    "read_pdf_file": read_pdf_file,
+    "search_local_files": search_local_files,
 }
 
 # OpenAI-compatible function tool definitions
@@ -480,6 +488,82 @@ TOOL_SCHEMAS = [
                 "type": "object",
                 "properties": {},
                 "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "set_master_volume",
+            "description": "Sets the system master audio volume percentage (0 to 100).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "level_percent": {
+                        "type": "integer",
+                        "description": "Volume percentage level (0-100)."
+                    }
+                },
+                "required": ["level_percent"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "mute_master_volume",
+            "description": "Mutes or unmutes system master audio output.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "mute": {
+                        "type": "boolean",
+                        "description": "True to mute, False to unmute."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "read_pdf_file",
+            "description": "Reads and extracts text from a local PDF document.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filepath": {
+                        "type": "string",
+                        "description": "Path to local PDF file."
+                    },
+                    "max_pages": {
+                        "type": "integer",
+                        "description": "Maximum pages to read (default 10)."
+                    }
+                },
+                "required": ["filepath"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_local_files",
+            "description": "Recursively searches local directory for files matching a wildcard pattern (e.g. '*.py', '*.pdf').",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query_pattern": {
+                        "type": "string",
+                        "description": "Wildcard pattern to search for (e.g. '*.pdf')."
+                    },
+                    "search_dir": {
+                        "type": "string",
+                        "description": "Starting directory (default '.')."
+                    }
+                },
+                "required": ["query_pattern"]
             }
         }
     }

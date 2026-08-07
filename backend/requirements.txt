@@ -36,6 +36,8 @@ pytest>=8.0.0
 psutil>=7.0.0
 pywebview>=5.0.0
 pyperclip>=1.9.0
+pypdf>=5.0.0
+
 
 
 
