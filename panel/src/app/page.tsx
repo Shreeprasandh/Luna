@@ -6,6 +6,7 @@ import { ChatArea, Message } from "@/components/ChatArea";
 import { InputBar } from "@/components/InputBar";
 import { MobileQuickBar } from "@/components/MobileQuickBar";
 import { LockScreen } from "@/components/LockScreen";
+import { FloatingOrb } from "@/components/FloatingOrb";
 
 const getBackendUrl = () => {
   if (typeof window !== "undefined") {
@@ -195,6 +196,8 @@ export default function Home() {
         isListening={isListening}
         disabled={isLoading || !sessionId}
       />
+
+      <FloatingOrb isListening={isListening} />
     </main>
   );
 }
