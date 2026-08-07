@@ -17,8 +17,10 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 
 from agent.core import start_session, end_session, process_message
+from routes.metrics import router as metrics_router
 
 load_dotenv()
+
 
 logging.basicConfig(
     level=logging.WARNING if os.getenv("ENVIRONMENT") == "production" else logging.INFO,
@@ -38,6 +40,9 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+app.include_router(metrics_router)
+
 
 
 # ─────────────────────────────────────────────────────────────
