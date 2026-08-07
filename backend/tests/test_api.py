@@ -200,6 +200,13 @@ def test_extreme_risk_password_guard():
     assert res2["allowed"] is True
 
 
+def test_magic_identity_word():
+    from auth import verify_magic_word
+    assert verify_magic_word("lusu") is True
+    assert verify_magic_word("wrong_word") is False
+
+
+
 
 
 
