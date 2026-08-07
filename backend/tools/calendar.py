@@ -1,6 +1,6 @@
 """
-Google Calendar Integration Tool — Event scheduling & agenda management.
-Allows Luna to view upcoming events and schedule new appointments on your calendar.
+Google Calendar Integration Tool — Multi-account event scheduling & agenda management.
+Allows Luna to view upcoming events and schedule appointments across multiple accounts.
 """
 
 import os
@@ -19,100 +19,127 @@ CALENDAR_SCOPES = [
 ]
 
 
-def _get_calendar_service():
+def _get_calendar_services() -> list[tuple[str, Any]]:
     """
-    Loads Google OAuth credentials and builds Calendar API service instance.
+    Loads all available Google OAuth credentials files in backend/ folder.
+    Supports: google_credentials.json, google_credentials_work.json, google_credentials_personal.json
+    Returns a list of (account_tag, service_instance) tuples.
     """
-    token_path = os.path.join(os.path.dirname(__file__), "..", "token.json")
-    creds_path = os.path.join(os.path.dirname(__file__), "..", "google_credentials.json")
+    backend_dir = os.path.join(os.path.dirname(__file__), "..")
+    
+    cred_files = [
+        ("primary", "google_credentials.json", "token.json"),
+        ("work", "google_credentials_work.json", "token_work.json"),
+        ("personal", "google_credentials_personal.json", "token_personal.json"),
+        ("luna", "google_credentials_luna.json", "token_luna.json"),
+    ]
 
-    creds = None
+    services = []
+
     try:
         from google.oauth2.credentials import Credentials
         from google_auth_oauthlib.flow import InstalledAppFlow
         from google.auth.transport.requests import Request
         import googleapiclient.discovery
 
-        if os.path.exists(token_path):
-            creds = Credentials.from_authorized_user_file(token_path, CALENDAR_SCOPES)
+        for tag, cred_filename, token_filename in cred_files:
+            creds_path = os.path.join(backend_dir, cred_filename)
+            token_path = os.path.join(backend_dir, token_filename)
 
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-            elif os.path.exists(creds_path):
-                flow = InstalledAppFlow.from_client_secrets_file(creds_path, CALENDAR_SCOPES)
-                creds = flow.run_local_server(port=0)
-                with open(token_path, "w") as token:
-                    token.write(creds.to_json())
-            else:
-                return None
+            creds = None
+            if os.path.exists(token_path):
+                try:
+                    creds = Credentials.from_authorized_user_file(token_path, CALENDAR_SCOPES)
+                except Exception:
+                    creds = None
 
-        return googleapiclient.discovery.build("calendar", "v3", credentials=creds)
+            if not creds or not creds.valid:
+                if creds and creds.expired and creds.refresh_token:
+                    try:
+                        creds.refresh(Request())
+                    except Exception:
+                        creds = None
+                elif os.path.exists(creds_path):
+                    flow = InstalledAppFlow.from_client_secrets_file(creds_path, CALENDAR_SCOPES)
+                    creds = flow.run_local_server(port=0)
+                    with open(token_path, "w") as token:
+                        token.write(creds.to_json())
+
+            if creds and creds.valid:
+                srv = googleapiclient.discovery.build("calendar", "v3", credentials=creds)
+                services.append((tag, srv))
+
+        return services
 
     except Exception as e:
-        log.warning(f"Calendar service initialization: {e}")
-        return None
+        log.warning(f"Calendar multi-account service initialization error: {e}")
+        return []
 
 
-def list_calendar_events(max_results: int = 5) -> dict[str, Any]:
+def list_calendar_events(max_results: int = 5, account: str | None = None) -> dict[str, Any]:
     """
-    Lists upcoming events from your primary Google Calendar.
+    Lists upcoming events across all connected Google Calendars (or a specific account).
 
     Args:
-        max_results: Maximum number of events to fetch (default 5).
+        max_results: Maximum events per calendar (default 5).
+        account: Optional account tag e.g. 'work' | 'personal' | None (for all).
 
     Returns:
-        Dict with status, event_count, and list of event dicts (summary, start, end, location).
+        Dict with status, count, and list of event dicts.
     """
-    log.info(f"[Tool: list_calendar_events] Fetching upcoming {max_results} events...")
-    service = _get_calendar_service()
+    log.info(f"[Tool: list_calendar_events] Fetching upcoming events (account filter: {account})...")
+    services = _get_calendar_services()
 
-    if not service:
+    if not services:
         return {
             "status": "requires_auth",
-            "message": "Google Calendar OAuth is not authorized yet. Place google_credentials.json in backend/ folder.",
+            "message": "No Google Calendar OAuth credentials found. Place google_credentials_work.json or google_credentials_personal.json in backend/ folder.",
             "events": [],
         }
 
-    try:
-        now = datetime.now(timezone.utc).isoformat()
-        events_result = service.events().list(
-            calendarId="primary",
-            timeMin=now,
-            maxResults=max_results,
-            singleEvents=True,
-            orderBy="startTime",
-        ).execute()
+    all_events = []
+    now = datetime.now(timezone.utc).isoformat()
 
-        items = events_result.get("items", [])
-        event_list = []
+    for tag, service in services:
+        if account and account.lower() not in (tag.lower(), "all"):
+            continue
 
-        for event in items:
-            start = event.get("start", {}).get("dateTime") or event.get("start", {}).get("date")
-            end = event.get("end", {}).get("dateTime") or event.get("end", {}).get("date")
+        try:
+            events_result = service.events().list(
+                calendarId="primary",
+                timeMin=now,
+                maxResults=max_results,
+                singleEvents=True,
+                orderBy="startTime",
+            ).execute()
 
-            event_list.append({
-                "id": event.get("id"),
-                "summary": event.get("summary", "(No Title)"),
-                "start": start,
-                "end": end,
-                "location": event.get("location", ""),
-                "description": event.get("description", ""),
-            })
+            items = events_result.get("items", [])
 
-        return {
-            "status": "success",
-            "count": len(event_list),
-            "events": event_list,
-        }
+            for event in items:
+                start = event.get("start", {}).get("dateTime") or event.get("start", {}).get("date")
+                end = event.get("end", {}).get("dateTime") or event.get("end", {}).get("date")
 
-    except Exception as e:
-        log.error(f"[Tool: list_calendar_events] Error: {e}")
-        return {
-            "status": "error",
-            "message": f"Failed to list calendar events: {str(e)}",
-            "events": [],
-        }
+                all_events.append({
+                    "account": tag,
+                    "id": event.get("id"),
+                    "summary": event.get("summary", "(No Title)"),
+                    "start": start,
+                    "end": end,
+                    "location": event.get("location", ""),
+                    "description": event.get("description", ""),
+                })
+
+        except Exception as e:
+            log.error(f"[Tool: list_calendar_events] Error reading calendar '{tag}': {e}")
+
+    # Sort combined events chronologically by start time
+    all_events.sort(key=lambda x: x.get("start") or "")
+
+    return {
+        "status": "success",
+        "count": len(all_events),
+        "events": all_events,
+    }
 
 
 def create_calendar_event(
@@ -121,28 +148,28 @@ def create_calendar_event(
     end_time: str,
     description: str = "",
     location: str = "",
+    account: str = "primary",
 ) -> dict[str, Any]:
     """
-    Schedules a new event on your primary Google Calendar.
-
-    Args:
-        summary: Event title / summary.
-        start_time: Start time in ISO format (e.g. '2026-08-08T10:00:00+05:30').
-        end_time: End time in ISO format (e.g. '2026-08-08T11:00:00+05:30').
-        description: Optional event description or notes.
-        location: Optional location string.
-
-    Returns:
-        Dict with status, event_id, and HTML link to created event.
+    Schedules a new event on a specified Google Calendar account ('work', 'personal', or 'primary').
     """
-    log.info(f"[Tool: create_calendar_event] Scheduling '{summary}' from {start_time} to {end_time}")
-    service = _get_calendar_service()
+    log.info(f"[Tool: create_calendar_event] Scheduling '{summary}' on account '{account}'")
+    services = _get_calendar_services()
 
-    if not service:
+    if not services:
         return {
             "status": "requires_auth",
-            "message": "Google Calendar OAuth is not authorized yet. Place google_credentials.json in backend/ folder.",
+            "message": "No Google Calendar OAuth credentials found in backend/ folder.",
         }
+
+    target_service = None
+    for tag, srv in services:
+        if tag.lower() == account.lower():
+            target_service = srv
+            break
+
+    if not target_service:
+        tag, target_service = services[0]
 
     try:
         event_body = {
@@ -153,12 +180,13 @@ def create_calendar_event(
             "end": {"dateTime": end_time},
         }
 
-        created_event = service.events().insert(
+        created_event = target_service.events().insert(
             calendarId="primary", body=event_body
         ).execute()
 
         return {
             "status": "success",
+            "scheduled_on_account": tag,
             "event_id": created_event.get("id"),
             "summary": summary,
             "html_link": created_event.get("htmlLink"),

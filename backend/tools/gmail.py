@@ -1,6 +1,6 @@
 """
-Gmail Integration Tool — OAuth authenticated email management.
-Allows Luna to list unread messages and compose/send emails on your behalf.
+Gmail Integration Tool — Multi-account OAuth authenticated email management.
+Supports primary, work, and personal Google accounts seamlessly.
 """
 
 import os
@@ -20,121 +20,147 @@ SCOPES = [
 ]
 
 
-def _get_gmail_service():
+def _get_gmail_services() -> list[tuple[str, Any]]:
     """
-    Loads Google OAuth credentials and builds Gmail API service instance.
-    Returns None if credentials or token file are not present.
+    Loads all available Google OAuth credentials files in backend/ folder.
+    Supports: google_credentials.json, google_credentials_work.json, google_credentials_personal.json
+    Returns a list of (account_tag, service_instance) tuples.
     """
-    token_path = os.path.join(os.path.dirname(__file__), "..", "token.json")
-    creds_path = os.path.join(os.path.dirname(__file__), "..", "google_credentials.json")
+    backend_dir = os.path.join(os.path.dirname(__file__), "..")
+    
+    cred_files = [
+        ("primary", "google_credentials.json", "token.json"),
+        ("work", "google_credentials_work.json", "token_work.json"),
+        ("personal", "google_credentials_personal.json", "token_personal.json"),
+        ("luna", "google_credentials_luna.json", "token_luna.json"),
+    ]
 
-    creds = None
+    services = []
+
     try:
         from google.oauth2.credentials import Credentials
         from google_auth_oauthlib.flow import InstalledAppFlow
         from google.auth.transport.requests import Request
         import googleapiclient.discovery
 
-        if os.path.exists(token_path):
-            creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+        for tag, cred_filename, token_filename in cred_files:
+            creds_path = os.path.join(backend_dir, cred_filename)
+            token_path = os.path.join(backend_dir, token_filename)
 
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-            elif os.path.exists(creds_path):
-                flow = InstalledAppFlow.from_client_secrets_file(creds_path, SCOPES)
-                creds = flow.run_local_server(port=0)
-                with open(token_path, "w") as token:
-                    token.write(creds.to_json())
-            else:
-                return None
+            creds = None
+            if os.path.exists(token_path):
+                try:
+                    creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+                except Exception:
+                    creds = None
 
-        return googleapiclient.discovery.build("gmail", "v1", credentials=creds)
+            if not creds or not creds.valid:
+                if creds and creds.expired and creds.refresh_token:
+                    try:
+                        creds.refresh(Request())
+                    except Exception:
+                        creds = None
+                elif os.path.exists(creds_path):
+                    flow = InstalledAppFlow.from_client_secrets_file(creds_path, SCOPES)
+                    creds = flow.run_local_server(port=0)
+                    with open(token_path, "w") as token:
+                        token.write(creds.to_json())
+
+            if creds and creds.valid:
+                srv = googleapiclient.discovery.build("gmail", "v1", credentials=creds)
+                services.append((tag, srv))
+
+        return services
 
     except Exception as e:
-        log.warning(f"Gmail service initialization: {e}")
-        return None
+        log.warning(f"Gmail multi-account service initialization error: {e}")
+        return []
 
 
-def list_unread_emails(max_results: int = 5) -> dict[str, Any]:
+def list_unread_emails(max_results: int = 5, account: str | None = None) -> dict[str, Any]:
     """
-    Lists recent unread emails from your Gmail inbox.
+    Lists recent unread emails across all connected Gmail accounts (or a specific account).
 
     Args:
-        max_results: Maximum number of unread emails to fetch (default 5).
+        max_results: Maximum unread emails per account (default 5).
+        account: Optional filter e.g. 'work' | 'personal' | None (for all).
 
     Returns:
-        Dict with status, message count, and list of email dicts (id, sender, subject, snippet).
+        Dict with status, count, and list of email dicts.
     """
-    log.info(f"[Tool: list_unread_emails] Fetching top {max_results} unread emails...")
-    service = _get_gmail_service()
+    log.info(f"[Tool: list_unread_emails] Fetching unread emails (account filter: {account})...")
+    services = _get_gmail_services()
 
-    if not service:
+    if not services:
         return {
             "status": "requires_auth",
-            "message": "Gmail OAuth is not authorized yet. Please place google_credentials.json in backend/ folder to complete authorization.",
+            "message": "No Google OAuth credentials found. Place google_credentials_work.json or google_credentials_personal.json in backend/ folder.",
             "emails": [],
         }
 
-    try:
-        results = service.users().messages().list(
-            userId="me", q="is:unread", maxResults=max_results
-        ).execute()
+    all_emails = []
 
-        messages = results.get("messages", [])
-        unread_list = []
+    for tag, service in services:
+        if account and account.lower() not in (tag.lower(), "all"):
+            continue
 
-        for msg in messages:
-            msg_data = service.users().messages().get(
-                userId="me", id=msg["id"], format="full"
+        try:
+            results = service.users().messages().list(
+                userId="me", q="is:unread", maxResults=max_results
             ).execute()
 
-            headers = msg_data.get("payload", {}).get("headers", [])
-            subject = next((h["value"] for h in headers if h["name"].lower() == "subject"), "(No Subject)")
-            sender = next((h["value"] for h in headers if h["name"].lower() == "from"), "(Unknown Sender)")
+            messages = results.get("messages", [])
 
-            unread_list.append({
-                "id": msg["id"],
-                "sender": sender,
-                "subject": subject,
-                "snippet": msg_data.get("snippet", ""),
-            })
+            for msg in messages:
+                msg_data = service.users().messages().get(
+                    userId="me", id=msg["id"], format="full"
+                ).execute()
 
-        return {
-            "status": "success",
-            "count": len(unread_list),
-            "emails": unread_list,
-        }
+                headers = msg_data.get("payload", {}).get("headers", [])
+                subject = next((h["value"] for h in headers if h["name"].lower() == "subject"), "(No Subject)")
+                sender = next((h["value"] for h in headers if h["name"].lower() == "from"), "(Unknown Sender)")
 
-    except Exception as e:
-        log.error(f"[Tool: list_unread_emails] Error: {e}")
-        return {
-            "status": "error",
-            "message": f"Failed to fetch Gmail unread messages: {str(e)}",
-            "emails": [],
-        }
+                all_emails.append({
+                    "account": tag,
+                    "id": msg["id"],
+                    "sender": sender,
+                    "subject": subject,
+                    "snippet": msg_data.get("snippet", ""),
+                })
+
+        except Exception as e:
+            log.error(f"[Tool: list_unread_emails] Error reading account '{tag}': {e}")
+
+    return {
+        "status": "success",
+        "count": len(all_emails),
+        "emails": all_emails,
+    }
 
 
-def send_email(to: str, subject: str, body: str) -> dict[str, Any]:
+def send_email(to: str, subject: str, body: str, account: str = "primary") -> dict[str, Any]:
     """
-    Sends an email to a specified recipient using Gmail API.
-
-    Args:
-        to: Recipient email address.
-        subject: Email subject line.
-        body: Plain text content of the email.
-
-    Returns:
-        Dict with status, recipient, subject, and message ID.
+    Sends an email from a specified account ('work', 'personal', or 'primary').
     """
-    log.info(f"[Tool: send_email] Sending email to '{to}' with subject '{subject}'")
-    service = _get_gmail_service()
+    log.info(f"[Tool: send_email] Sending email to '{to}' via account '{account}'")
+    services = _get_gmail_services()
 
-    if not service:
+    if not services:
         return {
             "status": "requires_auth",
-            "message": "Gmail OAuth is not authorized yet. Please place google_credentials.json in backend/ folder.",
+            "message": "No Google OAuth credentials found in backend/ folder.",
         }
+
+    # Find matching account service
+    target_service = None
+    for tag, srv in services:
+        if tag.lower() == account.lower():
+            target_service = srv
+            break
+
+    if not target_service:
+        # Default to first available service if specified tag not matched
+        tag, target_service = services[0]
 
     try:
         message = MIMEText(body)
@@ -142,12 +168,13 @@ def send_email(to: str, subject: str, body: str) -> dict[str, Any]:
         message["subject"] = subject
         raw_msg = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
-        sent_msg = service.users().messages().send(
+        sent_msg = target_service.users().messages().send(
             userId="me", body={"raw": raw_msg}
         ).execute()
 
         return {
             "status": "success",
+            "sent_from_account": tag,
             "message_id": sent_msg.get("id"),
             "to": to,
             "subject": subject,

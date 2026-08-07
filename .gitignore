@@ -4,9 +4,11 @@
 .env.production
 *.env
 
-# Google OAuth token — generated on first auth run
-token.json
-google_credentials.json
+# Google OAuth tokens & secrets — NEVER commit these
+token*.json
+google_credentials*.json
+client_secret*.json
+
 
 # Python
 __pycache__/
