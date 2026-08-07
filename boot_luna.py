@@ -46,7 +46,7 @@ def boot():
 
     # 1. Start FastAPI Backend
     log.info("1/3 Starting Backend Server (http://localhost:8000)...")
-    backend_cmd = [VENV_PYTHON, "-m", "uvicorn", "main:app", "--port", "8000"]
+    backend_cmd = [VENV_PYTHON, "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
     backend_proc = subprocess.Popen(
         backend_cmd,
         cwd=BACKEND_DIR,
