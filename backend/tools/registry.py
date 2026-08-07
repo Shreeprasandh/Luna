@@ -1,5 +1,6 @@
 """
 Tool Registry — central manager for tool schema definitions and execution dispatch.
+Includes: Web search, Image search, File system, Gmail, and Google Calendar tools.
 """
 
 import json
@@ -8,6 +9,8 @@ from typing import Any, Callable
 
 from tools.search import web_search, image_search
 from tools.files import read_file, write_file, list_directory
+from tools.gmail import list_unread_emails, send_email
+from tools.calendar import list_calendar_events, create_calendar_event
 
 log = logging.getLogger(__name__)
 
@@ -18,6 +21,10 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "read_file": read_file,
     "write_file": write_file,
     "list_directory": list_directory,
+    "list_unread_emails": list_unread_emails,
+    "send_email": send_email,
+    "list_calendar_events": list_calendar_events,
+    "create_calendar_event": create_calendar_event,
 }
 
 # OpenAI-compatible function tool definitions
@@ -110,6 +117,94 @@ TOOL_SCHEMAS = [
                 "required": []
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_unread_emails",
+            "description": "Lists recent unread emails from the user's Gmail inbox.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "max_results": {
+                        "type": "integer",
+                        "description": "Maximum number of unread emails to fetch (default 5)."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "send_email",
+            "description": "Sends an email to a recipient address via Gmail.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "to": {
+                        "type": "string",
+                        "description": "Recipient email address."
+                    },
+                    "subject": {
+                        "type": "string",
+                        "description": "Email subject line."
+                    },
+                    "body": {
+                        "type": "string",
+                        "description": "Email body content."
+                    }
+                },
+                "required": ["to", "subject", "body"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_calendar_events",
+            "description": "Lists upcoming events from the user's primary Google Calendar.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "max_results": {
+                        "type": "integer",
+                        "description": "Maximum number of upcoming events to list (default 5)."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "create_calendar_event",
+            "description": "Schedules a new appointment or event on the user's Google Calendar.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "summary": {
+                        "type": "string",
+                        "description": "Title or summary of the event."
+                    },
+                    "start_time": {
+                        "type": "string",
+                        "description": "Start time in ISO 8601 format e.g. 2026-08-08T10:00:00+05:30"
+                    },
+                    "end_time": {
+                        "type": "string",
+                        "description": "End time in ISO 8601 format e.g. 2026-08-08T11:00:00+05:30"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Optional notes or event description."
+                    }
+                },
+                "required": ["summary", "start_time", "end_time"]
+            }
+        }
     }
 ]
 
@@ -117,13 +212,6 @@ TOOL_SCHEMAS = [
 def execute_tool(name: str, arguments: dict[str, Any] | str) -> dict[str, Any]:
     """
     Dispatches execution of a registered tool by name with arguments.
-
-    Args:
-        name: Name of the tool e.g. 'web_search'
-        arguments: Dict or JSON string of arguments
-
-    Returns:
-        Dict returned by tool handler, or error dict if tool unknown.
     """
     if name not in _TOOL_MAP:
         log.error(f"Unknown tool requested: '{name}'")

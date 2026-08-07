@@ -13,7 +13,9 @@ psycopg2-binary==2.9.10
 # LLM providers
 groq==0.13.1
 google-generativeai==0.8.3
+google-auth-oauthlib==1.4.0
 ollama==0.4.4
+
 
 # Embeddings (local, CPU, no GPU needed)
 sentence-transformers==3.3.1
