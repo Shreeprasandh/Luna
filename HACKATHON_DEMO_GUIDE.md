@@ -1,10 +1,10 @@
-# 🎬 Luna Hackathon Demo & Verification Guide
+# Luna Hackathon Demo & Verification Guide
 
 Follow this guide to demonstrate and test Luna's capabilities end-to-end.
 
 ---
 
-## ⚡ Quick Start (Local Setup)
+## Quick Start (Local Setup)
 
 ### 1. Boot System
 Run the one-command boot switch:
@@ -18,7 +18,7 @@ This automatically initializes:
 
 ---
 
-## 🧪 Verification Walkthrough
+## Verification Walkthrough
 
 ### Test 1: Health & Metrics Endpoint
 Visit `http://localhost:8000/metrics` or run:

@@ -1,10 +1,10 @@
-# 🌙 Luna — Personal Autonomous AI Assistant
+# Luna — Personal Autonomous AI Assistant
 
 > **Zero-Token-Waste, Local-First, Autonomous AI Assistant with Long-Term Vector Memory & Native Tool Execution.**
 
 ---
 
-## 🚀 Executive Summary
+## Executive Summary
 
 Luna is a personal autonomous AI assistant designed for seamless daily productivity. Unlike traditional chatbots that forget context between sessions, Luna continuously learns your preferences, schedule, and habits, storing durable semantic memories in a Supabase vector database (`pgvector`) using zero-cost local CPU embeddings (`all-MiniLM-L6-v2`).
 
@@ -12,7 +12,7 @@ Luna communicates via text or voice (24/7 background desktop daemon), executes m
 
 ---
 
-## 🌟 Key Features
+## Key Capabilities
 
 1. **Zero-Token-Waste Architecture**
    - 100% local CPU embeddings (`sentence-transformers/all-MiniLM-L6-v2`) for $0.00 vector retrieval.
@@ -37,7 +37,7 @@ Luna communicates via text or voice (24/7 background desktop daemon), executes m
 
 ---
 
-## 🛡️ Safety & Control Switches
+## Safety & Control Switches
 
 - **Local Boot Switch:** `python boot_luna.py`
 - **Local Process Kill Switch:** `python kill_luna.py`
