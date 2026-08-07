@@ -118,6 +118,14 @@ def test_audio_tools():
     assert res["status"] == "success"
 
 
+def test_weather_tool():
+    from tools.weather import get_weather
+    res = get_weather("London")
+    assert res["status"] == "success"
+    assert "temperature_celsius" in res
+
+
+
 
 
 

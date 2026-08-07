@@ -3,7 +3,7 @@ Tool Registry — central manager for tool schema definitions and execution disp
 Includes: Web search, Image search, File system, Gmail, Calendar, Browser automation,
 Code execution, Screen Vision inspection, System Hardware monitor, Autonomous Git agent,
 Proactive Task Scheduler, App Launcher, Clipboard Manager, Network Diagnostics,
-System Audio controller, PDF Reader, and Fast File Search.
+System Audio controller, PDF Reader, Fast File Search, Webcam Vision, and Weather.
 """
 
 import json
@@ -26,6 +26,8 @@ from tools.network import get_network_diagnostics
 from tools.audio import set_master_volume, mute_master_volume
 from tools.pdf_reader import read_pdf_file
 from tools.file_search import search_local_files
+from tools.webcam import capture_webcam_snapshot
+from tools.weather import get_weather
 
 log = logging.getLogger(__name__)
 
@@ -59,6 +61,8 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "mute_master_volume": mute_master_volume,
     "read_pdf_file": read_pdf_file,
     "search_local_files": search_local_files,
+    "capture_webcam_snapshot": capture_webcam_snapshot,
+    "get_weather": get_weather,
 }
 
 # OpenAI-compatible function tool definitions
@@ -564,6 +568,40 @@ TOOL_SCHEMAS = [
                     }
                 },
                 "required": ["query_pattern"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "capture_webcam_snapshot",
+            "description": "Captures a frame snapshot from the primary laptop webcam camera.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "save_path": {
+                        "type": "string",
+                        "description": "Destination file path (default 'design/webcam_snapshot.png')."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "description": "Fetches real-time weather conditions, temperature, humidity, and wind speed for a specified city.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "city": {
+                        "type": "string",
+                        "description": "City name (e.g. 'London', 'New York', 'Tokyo')."
+                    }
+                },
+                "required": ["city"]
             }
         }
     }
