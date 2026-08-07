@@ -1,0 +1,77 @@
+"use client";
+
+import React from "react";
+import { LogoMark } from "./LogoMark";
+import { Power, Palette } from "lucide-react";
+
+export type ThemeOption = "dark" | "light" | "nordic" | "sage" | "espresso" | "midnight" | "sandstone";
+
+interface HeaderProps {
+  currentTheme: ThemeOption;
+  onThemeChange: (theme: ThemeOption) => void;
+  isBackendConnected: boolean;
+}
+
+const THEME_LABELS: Record<ThemeOption, string> = {
+  dark: "Obsidian Slate",
+  light: "Warm Parchment",
+  nordic: "Nordic Fog",
+  sage: "Kyoto Moss",
+  espresso: "Espresso Wood",
+  midnight: "Midnight Indigo",
+  sandstone: "Sandstone Dune",
+};
+
+export const Header: React.FC<HeaderProps> = ({
+  currentTheme,
+  onThemeChange,
+  isBackendConnected,
+}) => {
+  return (
+    <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--surface)] select-none">
+      {/* Brand & Mark */}
+      <div className="flex items-center gap-3">
+        <LogoMark size={26} />
+        <div>
+          <h1 className="text-base font-semibold tracking-tight text-[var(--text-primary)]">
+            Luna
+          </h1>
+          <span className="text-[10px] tracking-wider uppercase text-[var(--text-secondary)]">
+            Personal Assistant
+          </span>
+        </div>
+      </div>
+
+      {/* Controls */}
+      <div className="flex items-center gap-3">
+        {/* Theme Selector Dropdown */}
+        <div className="relative flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md bg-[var(--bg)] border border-[var(--border)]">
+          <Palette className="w-3.5 h-3.5 text-[var(--accent)]" />
+          <select
+            value={currentTheme}
+            onChange={(e) => onThemeChange(e.target.value as ThemeOption)}
+            className="bg-transparent text-[var(--text-primary)] text-xs focus:outline-none cursor-pointer pr-1"
+          >
+            {Object.entries(THEME_LABELS).map(([value, label]) => (
+              <option key={value} value={value} className="bg-[#222831] text-[#DFD0B8]">
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Backend Status Indicator */}
+        <div
+          title={isBackendConnected ? "Backend Online" : "Backend Offline"}
+          className="flex items-center justify-center p-1.5 rounded-md border border-[var(--border)]"
+        >
+          <Power
+            className={`w-4 h-4 transition-colors ${
+              isBackendConnected ? "text-emerald-400" : "text-amber-500/70"
+            }`}
+          />
+        </div>
+      </div>
+    </header>
+  );
+};

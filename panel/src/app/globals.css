@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+/*
+  Luna Design Tokens — 7 Curated Themes
+  ─────────────────────────────────────
+  1. dark      — Obsidian Slate (Default)
+  2. light     — Warm Parchment
+  3. nordic    — Nordic Fog
+  4. sage      — Kyoto Moss
+  5. espresso  — Espresso Wood
+  6. midnight  — Midnight Indigo
+  7. sandstone — Sandstone Dune
+*/
+
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* 1. OBSIDIAN SLATE (Default Dark) */
+[data-theme="dark"], :root {
+  --bg:              #222831;
+  --surface:         #393E46;
+  --surface-alt:     #2D3139;
+  --border:          rgba(148, 137, 121, 0.25);
+  --border-strong:   rgba(148, 137, 121, 0.50);
+  --text-primary:    #DFD0B8;
+  --text-secondary:  #948979;
+  --accent:          #C9B59C;
+  --code-bg:         #1A1E24;
+}
+
+/* 2. WARM PARCHMENT (Default Light) */
+[data-theme="light"] {
+  --bg:              #F9F8F6;
+  --surface:         #EFE9E3;
+  --surface-alt:     #E8E2DC;
+  --border:          #D9CFC7;
+  --border-strong:   #C9B59C;
+  --text-primary:    #222831;
+  --text-secondary:  #948979;
+  --accent:          #C9B59C;
+  --code-bg:         #222831;
+}
+
+/* 3. NORDIC FOG */
+[data-theme="nordic"] {
+  --bg:              #1A1D24;
+  --surface:         #242831;
+  --surface-alt:     #2D323E;
+  --border:          rgba(139, 149, 165, 0.25);
+  --border-strong:   rgba(139, 149, 165, 0.50);
+  --text-primary:    #E2E8F0;
+  --text-secondary:  #8B95A5;
+  --accent:          #94A3B8;
+  --code-bg:         #13151B;
+}
+
+/* 4. KYOTO MOSS */
+[data-theme="sage"] {
+  --bg:              #1B201E;
+  --surface:         #252B28;
+  --surface-alt:     #2E3632;
+  --border:          rgba(138, 150, 144, 0.25);
+  --border-strong:   rgba(163, 177, 138, 0.50);
+  --text-primary:    #E3E8E5;
+  --text-secondary:  #8A9690;
+  --accent:          #A3B18A;
+  --code-bg:         #141816;
+}
+
+/* 5. ESPRESSO WOOD */
+[data-theme="espresso"] {
+  --bg:              #1C1917;
+  --surface:         #292524;
+  --surface-alt:     #342E2C;
+  --border:          rgba(168, 162, 158, 0.25);
+  --border-strong:   rgba(214, 192, 179, 0.50);
+  --text-primary:    #F5F5F4;
+  --text-secondary:  #A8A29E;
+  --accent:          #D6C0B3;
+  --code-bg:         #141211;
+}
+
+/* 6. MIDNIGHT INDIGO */
+[data-theme="midnight"] {
+  --bg:              #0F172A;
+  --surface:         #1E293B;
+  --surface-alt:     #273549;
+  --border:          rgba(100, 116, 139, 0.25);
+  --border-strong:   rgba(148, 163, 184, 0.50);
+  --text-primary:    #F8FAFC;
+  --text-secondary:  #64748B;
+  --accent:          #94A3B8;
+  --code-bg:         #0A0F1D;
+}
+
+/* 7. SANDSTONE DUNE */
+[data-theme="sandstone"] {
+  --bg:              #F5F2EB;
+  --surface:         #E8E2D7;
+  --surface-alt:     #DDD6CA;
+  --border:          #D1C7B7;
+  --border-strong:   #B49A85;
+  --text-primary:    #292524;
+  --text-secondary:  #78716C;
+  --accent:          #B49A85;
+  --code-bg:         #292524;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  transition: background-color 300ms ease-out, color 300ms ease-out;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
