@@ -83,10 +83,19 @@ def process_message(session_id: str, user_text: str) -> dict[str, Any]:
     if session_id not in _sessions:
         raise ValueError(f"Session '{session_id}' not found. Call start_session() first.")
 
+    # Check for goodbye or exit intent to end session safely
+    if any(w in user_text.lower() for w in ("goodbye", "exit session", "end session")):
+        end_session(session_id)
+        return {
+            "text": "Session summarized and ended, Sir. Have a fantastic day!",
+            "type": "text",
+        }
+
     turn_count = get_turn_count(session_id)
     if turn_count >= MAX_TURNS:
+        end_session(session_id)
         return {
-            "text": "Sir, we have reached the session limit. Say 'goodbye' to end this session and start fresh.",
+            "text": "Sir, we reached the turn limit for this session. I have summarized our context to memory and started a fresh session for you.",
             "type": "text",
         }
 

@@ -49,6 +49,7 @@ def run_daemon_loop():
         return
 
     # 2. Start session with backend
+    session_id = None
     try:
         r = httpx.post(f"{BACKEND_URL}/session/start", timeout=5.0)
         session_id = r.json().get("session_id")

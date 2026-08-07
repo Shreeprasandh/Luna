@@ -51,6 +51,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ onUnlock }) => {
                 setPin(e.target.value);
               }}
               placeholder="Enter 6-Digit PIN"
+              aria-label="Master Access PIN"
               className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-[#0F1012] border border-[#2B2D33] text-center font-mono text-base text-[#F0F2FA] focus:outline-none focus:border-[#C9B59C] transition-colors"
             />
           </div>
