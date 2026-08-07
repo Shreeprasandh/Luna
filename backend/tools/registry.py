@@ -3,7 +3,8 @@ Tool Registry — central manager for tool schema definitions and execution disp
 Includes: Web search, Image search, File system, Gmail, Calendar, Browser automation,
 Code execution, Screen Vision inspection, Pixel Color Inspector, System Hardware monitor, Autonomous Git agent,
 Proactive Task Scheduler, App Launcher, Clipboard Manager, Network Diagnostics,
-System Audio controller, PDF Reader, Fast File Search, Webcam Vision, Weather, and PowerToys Awake.
+System Audio controller, PDF Reader, Fast File Search, Webcam Vision, Weather, PowerToys Awake,
+Automated File Organizer, Large File Finder, and Security Port Scanner.
 """
 
 import json
@@ -29,6 +30,8 @@ from tools.file_search import search_local_files
 from tools.webcam import capture_webcam_snapshot
 from tools.weather import get_weather
 from tools.powertoys import toggle_awake_mode
+from tools.disk_cleaner import organize_directory, find_large_files
+from tools.port_scanner import get_open_ports
 
 log = logging.getLogger(__name__)
 
@@ -66,6 +69,9 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "capture_webcam_snapshot": capture_webcam_snapshot,
     "get_weather": get_weather,
     "toggle_awake_mode": toggle_awake_mode,
+    "organize_directory": organize_directory,
+    "find_large_files": find_large_files,
+    "get_open_ports": get_open_ports,
 }
 
 # OpenAI-compatible function tool definitions
@@ -642,6 +648,56 @@ TOOL_SCHEMAS = [
                         "description": "True to keep PC awake, False to restore normal sleep timer."
                     }
                 },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "organize_directory",
+            "description": "Sorts unorganized files into categorized subfolders (Documents, Images, Code, Archives, Executables).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "dirpath": {
+                        "type": "string",
+                        "description": "Target folder path to organize (defaults to '.')."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "find_large_files",
+            "description": "Finds large files taking up disk space.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "dirpath": {
+                        "type": "string",
+                        "description": "Search directory (default '.')."
+                    },
+                    "min_size_mb": {
+                        "type": "integer",
+                        "description": "Minimum file size in MB to flag (default 100)."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_open_ports",
+            "description": "Scans active listening network ports and connections on the machine.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
                 "required": []
             }
         }

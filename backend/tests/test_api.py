@@ -132,6 +132,21 @@ def test_powertoys_awake_tool():
     assert res["awake_enabled"] is True
 
 
+def test_port_scanner_tool():
+    from tools.port_scanner import get_open_ports
+    res = get_open_ports()
+    assert res["status"] == "success"
+    assert "open_port_count" in res
+
+
+def test_disk_cleaner_tool():
+    from tools.disk_cleaner import find_large_files
+    res = find_large_files("tools", min_size_mb=1)
+    assert res["status"] == "success"
+    assert "found_count" in res
+
+
+
 
 
 
