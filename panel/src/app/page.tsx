@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Header, ThemeOption } from "@/components/Header";
 import { ChatArea, Message } from "@/components/ChatArea";
 import { InputBar } from "@/components/InputBar";
+import { MobileQuickBar } from "@/components/MobileQuickBar";
 
 const BACKEND_URL = "http://localhost:8000";
 
@@ -146,6 +147,8 @@ export default function Home() {
       />
 
       <ChatArea messages={messages} isLoading={isLoading} />
+
+      <MobileQuickBar onQuickAction={handleSendMessage} />
 
       <InputBar
         onSendMessage={handleSendMessage}
