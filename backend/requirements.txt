@@ -1,0 +1,28 @@
+# Web framework
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+python-multipart==0.0.20
+
+# Environment
+python-dotenv==1.0.1
+
+# Database
+supabase==2.10.0
+psycopg2-binary==2.9.10
+
+# LLM providers
+groq==0.13.1
+google-generativeai==0.8.3
+ollama==0.4.4
+
+# Embeddings (local, CPU, no GPU needed)
+sentence-transformers==3.3.1
+
+# HTTP client (version resolved by supabase dependency)
+httpx>=0.26,<0.28
+
+# Data validation
+pydantic==2.10.4
+
+# Utilities
+tenacity==9.0.0
