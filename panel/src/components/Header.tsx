@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { LogoMark } from "./LogoMark";
-import { Power, Music, Settings } from "lucide-react";
+import { Music, Settings } from "lucide-react";
 import { SettingsModal } from "./SettingsModal";
 
 export type ThemeOption = "dark" | "light" | "nordic" | "sage" | "espresso" | "midnight" | "sandstone";
@@ -57,20 +57,6 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Settings className="w-3.5 h-3.5" />
           </button>
-
-          {/* Backend Status Indicator */}
-          <div
-            role="status"
-            aria-label={isBackendConnected ? "Backend online" : "Backend offline"}
-            title={isBackendConnected ? "Backend Online" : "Backend Offline"}
-            className="flex items-center justify-center p-1.5 rounded-md border border-[var(--border)]"
-          >
-            <Power
-              className={`w-3.5 h-3.5 transition-colors ${
-                isBackendConnected ? "text-emerald-400" : "text-amber-500/70"
-              }`}
-            />
-          </div>
         </div>
       </header>
 
