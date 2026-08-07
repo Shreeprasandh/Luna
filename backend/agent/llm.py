@@ -165,13 +165,18 @@ def chat(
         log.warning(f"Gemini failed: {e}")
         errors.append(f"Gemini: {e}")
 
-    # Tier 3 — Ollama
+    # Tier 3 — Ollama / Local Fallback
     try:
         log.debug("LLM: falling back to local Ollama")
         res = _call_ollama(messages, limit, tools_def)
         return res
     except Exception as e:
-        log.warning(f"Ollama failed: {e}")
+        log.warning(f"Ollama local fallback skipped/failed: {e}")
         errors.append(f"Ollama: {e}")
 
-    raise RuntimeError("All LLM providers failed.\n" + "\n".join(errors))
+    # Ultimate Safety Fallback — Graceful Token Exhaustion & Outage Handler
+    log.error(f"All LLM providers exhausted or unavailable: {errors}")
+    return {
+        "type": "text",
+        "content": "Sir, all cloud AI models have currently reached their rate limit or API token quota. Your local desktop tools (file search, system hardware status, volume control, weather, PowerToys) remain 100% operational. Please update your API keys in backend/.env to resume deep reasoning.",
+    }

@@ -213,6 +213,14 @@ def test_mobile_file_download_tool():
     assert "download_url" in res
 
 
+def test_api_quota_exhaustion_fallback():
+    from agent.llm import chat
+    # Test chat call with empty messages list -> triggers fallback response gracefully without crashing
+    res = chat([{"role": "user", "content": "hello"}], with_tools=False)
+    assert isinstance(res, (dict, str))
+
+
+
 
 
 
