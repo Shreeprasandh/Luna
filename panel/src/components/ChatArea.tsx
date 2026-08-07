@@ -90,17 +90,24 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ messages, isLoading }) => {
         ))}
       </AnimatePresence>
 
-      {/* Loading Thinking Indicator */}
+      {/* Sleek Visual Live Tool / Research Animation Indicator */}
       {isLoading && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex items-center gap-2 p-3 w-fit rounded-lg bg-[var(--surface)] border border-[var(--border)] text-xs text-[var(--text-secondary)]"
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          className="flex items-center gap-2.5 px-3.5 py-2.5 w-fit rounded-lg bg-[var(--surface)] border border-[var(--border-strong)] text-xs text-[var(--text-primary)] shadow-sm"
         >
-          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-ping" />
-          <span>Luna is thinking...</span>
+          <div className="relative flex items-center justify-center w-3.5 h-3.5">
+            <div className="absolute w-3.5 h-3.5 rounded-full border-2 border-t-[var(--accent)] border-r-transparent border-b-transparent border-l-transparent animate-spin" />
+            <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+          </div>
+          <span className="font-mono text-[11px] text-[var(--text-primary)] tracking-wide">
+            Gathering data & synthesizing key points, Sir...
+          </span>
         </motion.div>
       )}
+
 
       <div ref={bottomRef} />
     </div>
