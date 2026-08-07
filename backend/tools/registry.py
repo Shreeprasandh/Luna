@@ -1,7 +1,7 @@
 """
 Tool Registry — central manager for tool schema definitions and execution dispatch.
 Includes: Web search, Image search, File system, Gmail, Calendar, Browser automation,
-Code execution, and Screen Vision inspection tools.
+Code execution, Screen Vision inspection, System Hardware monitor, and Autonomous Git agent.
 """
 
 import json
@@ -15,6 +15,8 @@ from tools.calendar import list_calendar_events, create_calendar_event
 from tools.browser import browse_url, take_screenshot
 from tools.code import execute_python_code
 from tools.screen import capture_desktop_screen, analyze_screen_image
+from tools.system import get_system_health
+from tools.git_agent import git_status, git_commit_and_push
 
 log = logging.getLogger(__name__)
 
@@ -34,6 +36,9 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "execute_python_code": execute_python_code,
     "capture_desktop_screen": capture_desktop_screen,
     "analyze_screen_image": analyze_screen_image,
+    "get_system_health": get_system_health,
+    "git_status": git_status,
+    "git_commit_and_push": git_commit_and_push,
 }
 
 # OpenAI-compatible function tool definitions
@@ -291,7 +296,7 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "analyze_screen_image",
-            "description": "Uses Gemini Multimodal Vision to inspect and analyze an image file (e.g. desktop screenshot or page capture).",
+            "description": "Uses Gemini Multimodal Vision to inspect and analyze an image file.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -305,6 +310,56 @@ TOOL_SCHEMAS = [
                     }
                 },
                 "required": ["image_path"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_system_health",
+            "description": "Inspects real-time PC hardware metrics including CPU, RAM, Disk usage %, and top processes.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "git_status",
+            "description": "Inspects current Git repository branch and modified/untracked files.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "repo_path": {
+                        "type": "string",
+                        "description": "Path to local Git repo (default '.')."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "git_commit_and_push",
+            "description": "Stages all changes, creates a commit with the provided message, and pushes to remote.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "commit_message": {
+                        "type": "string",
+                        "description": "Git commit message."
+                    },
+                    "repo_path": {
+                        "type": "string",
+                        "description": "Path to local Git repo (default '.')."
+                    }
+                },
+                "required": ["commit_message"]
             }
         }
     }

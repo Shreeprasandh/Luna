@@ -46,3 +46,19 @@ def test_session_lifecycle():
 def test_chat_invalid_session():
     res = client.post("/chat", json={"session_id": "invalid-session-id", "text": "Hello"})
     assert res.status_code == 404
+
+
+def test_system_health_tool():
+    from tools.system import get_system_health
+    res = get_system_health()
+    assert res["status"] == "success"
+    assert "cpu" in res
+    assert "ram" in res
+
+
+def test_git_status_tool():
+    from tools.git_agent import git_status
+    res = git_status()
+    assert res["status"] == "success"
+    assert res["branch"] == "main"
+
