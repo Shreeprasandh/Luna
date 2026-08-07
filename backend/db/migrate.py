@@ -99,7 +99,25 @@ MIGRATIONS = {
             WHERE id = memory_id;
         $$;
     """,
+
+    "007_rls_policies": """
+        DO $$
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'service_role_all_memories') THEN
+                CREATE POLICY "service_role_all_memories" ON memories FOR ALL USING (auth.role() = 'service_role');
+            END IF;
+
+            IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'service_role_all_preferences') THEN
+                CREATE POLICY "service_role_all_preferences" ON preferences FOR ALL USING (auth.role() = 'service_role');
+            END IF;
+
+            IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'service_role_all_pending_tasks') THEN
+                CREATE POLICY "service_role_all_pending_tasks" ON pending_tasks FOR ALL USING (auth.role() = 'service_role');
+            END IF;
+        END $$;
+    """,
 }
+
 
 def run():
     print("Connecting to Supabase PostgreSQL...")
