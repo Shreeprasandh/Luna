@@ -146,6 +146,22 @@ def test_disk_cleaner_tool():
     assert "found_count" in res
 
 
+def test_spotify_youtube_canva_tools():
+    from tools.media import get_song_lyrics
+    from tools.youtube import play_youtube_video
+    from tools.canva import open_canva_design
+
+    lyrics_res = get_song_lyrics("Bohemian Rhapsody")
+    assert lyrics_res["status"] == "success"
+
+    yt_res = play_youtube_video("SpaceX launch")
+    assert yt_res["status"] == "success"
+
+    canva_res = open_canva_design("invitation", "birthday")
+    assert canva_res["status"] == "success"
+
+
+
 
 
 

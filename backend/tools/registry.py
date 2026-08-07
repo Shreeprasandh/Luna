@@ -4,7 +4,8 @@ Includes: Web search, Image search, File system, Gmail, Calendar, Browser automa
 Code execution, Screen Vision inspection, Pixel Color Inspector, System Hardware monitor, Autonomous Git agent,
 Proactive Task Scheduler, App Launcher, Clipboard Manager, Network Diagnostics,
 System Audio controller, PDF Reader, Fast File Search, Webcam Vision, Weather, PowerToys Awake,
-Automated File Organizer, Large File Finder, and Security Port Scanner.
+Automated File Organizer, Large File Finder, Security Port Scanner,
+Spotify Player & Lyrics, YouTube Player & Control, and Canva Design Automator.
 """
 
 import json
@@ -32,6 +33,9 @@ from tools.weather import get_weather
 from tools.powertoys import toggle_awake_mode
 from tools.disk_cleaner import organize_directory, find_large_files
 from tools.port_scanner import get_open_ports
+from tools.media import play_spotify_song, get_song_lyrics
+from tools.youtube import play_youtube_video, control_youtube_player
+from tools.canva import open_canva_design
 
 log = logging.getLogger(__name__)
 
@@ -72,6 +76,11 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "organize_directory": organize_directory,
     "find_large_files": find_large_files,
     "get_open_ports": get_open_ports,
+    "play_spotify_song": play_spotify_song,
+    "get_song_lyrics": get_song_lyrics,
+    "play_youtube_video": play_youtube_video,
+    "control_youtube_player": control_youtube_player,
+    "open_canva_design": open_canva_design,
 }
 
 # OpenAI-compatible function tool definitions
@@ -699,6 +708,95 @@ TOOL_SCHEMAS = [
                 "type": "object",
                 "properties": {},
                 "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "play_spotify_song",
+            "description": "Searches and plays a song or playlist on Spotify.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "song_name": {
+                        "type": "string",
+                        "description": "Song title or artist name to play."
+                    }
+                },
+                "required": ["song_name"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_song_lyrics",
+            "description": "Fetches the lyrics for a song by title and artist name.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "song_title": {
+                        "type": "string",
+                        "description": "Song title to look up."
+                    }
+                },
+                "required": ["song_title"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "play_youtube_video",
+            "description": "Searches YouTube for a video query and opens the video or search results directly.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Video title or topic to search on YouTube."
+                    }
+                },
+                "required": ["query"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "control_youtube_player",
+            "description": "Controls desktop video playback (play, pause, toggle captions, fullscreen).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "description": "Action type: 'play_pause', 'mute', 'fullscreen', 'toggle_captions'."
+                    }
+                },
+                "required": ["action"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "open_canva_design",
+            "description": "Opens Canva design canvas pre-configured for a specified template (e.g. invitation, poster, presentation, thumbnail).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "design_type": {
+                        "type": "string",
+                        "description": "Type of design ('invitation', 'poster', 'presentation', 'logo', 'thumbnail')."
+                    },
+                    "topic": {
+                        "type": "string",
+                        "description": "Theme or topic (e.g. 'birthday party', 'hackathon')."
+                    }
+                },
+                "required": ["design_type", "topic"]
             }
         }
     }
