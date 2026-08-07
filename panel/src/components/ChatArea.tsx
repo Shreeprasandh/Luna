@@ -127,7 +127,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ messages, isLoading }) => {
             <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
           </div>
           <span className="font-mono text-[11px] text-[var(--text-primary)] tracking-wide">
-            Gathering data & synthesizing key points, Sir...
+            Processing request, Sir...
           </span>
         </motion.div>
       )}
