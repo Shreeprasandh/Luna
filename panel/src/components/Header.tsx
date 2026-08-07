@@ -50,6 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
           <select
             value={currentTheme}
             onChange={(e) => onThemeChange(e.target.value as ThemeOption)}
+            aria-label="Select theme preset"
             className="bg-transparent text-[var(--text-primary)] text-xs focus:outline-none cursor-pointer pr-1"
           >
             {Object.entries(THEME_LABELS).map(([value, label]) => (
@@ -62,6 +63,8 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Backend Status Indicator */}
         <div
+          role="status"
+          aria-label={isBackendConnected ? "Backend online" : "Backend offline"}
           title={isBackendConnected ? "Backend Online" : "Backend Offline"}
           className="flex items-center justify-center p-1.5 rounded-md border border-[var(--border)]"
         >
@@ -71,6 +74,7 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           />
         </div>
+
       </div>
     </header>
   );

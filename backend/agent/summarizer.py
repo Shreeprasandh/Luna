@@ -84,13 +84,15 @@ def summarize_session(
     ]
 
     try:
-        raw = chat(extraction_messages, max_tokens=800)
+        raw_res = chat(extraction_messages, max_tokens=800)
+        raw_text = raw_res.get("content", "") if isinstance(raw_res, dict) else str(raw_res)
     except Exception as e:
         log.error(f"[{session_id}] Summariser LLM call failed: {e}")
         return 0
 
     # Parse the JSON response
-    memories = _parse_extraction(raw, session_id)
+    memories = _parse_extraction(raw_text, session_id)
+
     if not memories:
         return 0
 

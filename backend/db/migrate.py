@@ -1,22 +1,41 @@
 """
 Luna Database Migration Runner
-Runs all pending migrations directly against Supabase PostgreSQL.
+Runs pending migrations directly against Supabase PostgreSQL.
 """
 
-import psycopg2
+import os
 import sys
+import psycopg2
+from dotenv import load_dotenv
+
+load_dotenv()
 
 conn_params = {
-    "host": "aws-0-ap-southeast-1.pooler.supabase.com",
-    "port": 5432,
-    "dbname": "postgres",
-    "user": "postgres.aamwujutwulaaspjvdeg",
-    "password": "Vayalur!@12",
+    "host": os.getenv("SUPABASE_DB_HOST", "aws-0-ap-southeast-1.pooler.supabase.com"),
+    "port": int(os.getenv("SUPABASE_DB_PORT", "5432")),
+    "dbname": os.getenv("SUPABASE_DB_NAME", "postgres"),
+    "user": os.getenv("SUPABASE_DB_USER", "postgres.aamwujutwulaaspjvdeg"),
+    "password": os.getenv("SUPABASE_DB_PASSWORD", ""),
     "sslmode": "require",
     "connect_timeout": 15,
 }
 
 MIGRATIONS = {
+    "001_memories_table": """
+        CREATE TABLE IF NOT EXISTS memories (
+            id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            content       TEXT NOT NULL,
+            source        TEXT DEFAULT 'conversation',
+            embedding     vector(768),
+            tags          TEXT[] DEFAULT '{}',
+            importance    FLOAT DEFAULT 1.0,
+            user_id       TEXT DEFAULT 'default',
+            created_at    TIMESTAMPTZ DEFAULT now(),
+            last_accessed TIMESTAMPTZ DEFAULT now()
+        );
+        ALTER TABLE memories ENABLE ROW LEVEL SECURITY;
+    """,
+
     "003_preferences": """
         CREATE TABLE IF NOT EXISTS preferences (
             id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),

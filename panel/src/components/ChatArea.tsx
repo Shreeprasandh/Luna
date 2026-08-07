@@ -26,7 +26,12 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ messages, isLoading }) => {
   }, [messages, isLoading]);
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[var(--bg)]">
+    <div
+      role="log"
+      aria-live="polite"
+      className="flex-1 overflow-y-auto p-4 space-y-4 bg-[var(--bg)]"
+    >
+
       <AnimatePresence initial={false}>
         {messages.map((msg) => (
           <motion.div
