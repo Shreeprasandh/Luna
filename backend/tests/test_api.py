@@ -241,6 +241,28 @@ def test_expansion_tools():
     assert scan_wifi_devices()["status"] == "success"
 
 
+def test_wakeword_and_next_tier_tools():
+    import sys
+    sys.path.insert(0, os.path.abspath(".."))
+    from daemon.wakeword import is_wake_word_detected
+    from tools.voice_settings import set_voice_settings
+    from tools.finance import get_financial_quote
+    from tools.news import get_tech_news_digest
+    from tools.focus_mode import toggle_focus_shield
+    from tools.junk_cleaner import clean_junk_files
+    from tools.speedtest import run_network_speedtest
+
+    assert is_wake_word_detected("hey luna open vs code") is True
+    assert set_voice_settings(180, 50, "female")["status"] == "success"
+    assert get_financial_quote("BTC")["status"] == "success"
+    assert get_tech_news_digest()["status"] == "success"
+    assert toggle_focus_shield(True, 25)["status"] == "success"
+    assert clean_junk_files("tools")["status"] == "success"
+    assert run_network_speedtest()["status"] == "success"
+
+
+
+
 
 
 

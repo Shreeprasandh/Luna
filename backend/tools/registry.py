@@ -9,7 +9,9 @@ Spotify Player & Lyrics, YouTube Player & Control, Canva Design Automator, Windo
 System Power Inspector, Clipboard Snippet Stash, Executive Daily Briefing, Remote Mobile Control,
 Mobile File Retrieval, Workspace Layout Snap, Multi-Item Clipboard Vault, Process Manager & Kill Switch,
 File Zipper Archive, Smart Playlist Generator, Code Refactoring & Lint Auditor, GitHub Repository Tracker,
-Environment Secret Vault, Webcam Security Motion Alarm, and Wi-Fi Device Intrusion Scanner.
+Environment Secret Vault, Webcam Security Motion Alarm, Wi-Fi Device Intrusion Scanner,
+Voice Settings, Book Summarizer, Financial Quotes, Tech News Digest, Screen Region Crop, Focus Shield,
+Junk File Cleaner, and Network Speedtest.
 """
 
 import json
@@ -55,6 +57,14 @@ from tools.github_tracker import track_github_repository
 from tools.env_vault import generate_env_vault_template
 from tools.webcam_alarm import check_webcam_motion_alarm
 from tools.wifi_scanner import scan_wifi_devices
+from tools.voice_settings import set_voice_settings
+from tools.book_reader import summarize_pdf_book
+from tools.finance import get_financial_quote
+from tools.news import get_tech_news_digest
+from tools.screen_crop import crop_screen_region
+from tools.focus_mode import toggle_focus_shield
+from tools.junk_cleaner import clean_junk_files
+from tools.speedtest import run_network_speedtest
 
 log = logging.getLogger(__name__)
 
@@ -121,6 +131,14 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "generate_env_vault_template": generate_env_vault_template,
     "check_webcam_motion_alarm": check_webcam_motion_alarm,
     "scan_wifi_devices": scan_wifi_devices,
+    "set_voice_settings": set_voice_settings,
+    "summarize_pdf_book": summarize_pdf_book,
+    "get_financial_quote": get_financial_quote,
+    "get_tech_news_digest": get_tech_news_digest,
+    "crop_screen_region": crop_screen_region,
+    "toggle_focus_shield": toggle_focus_shield,
+    "clean_junk_files": clean_junk_files,
+    "run_network_speedtest": run_network_speedtest,
 }
 
 # OpenAI-compatible function tool definitions
@@ -1173,6 +1191,144 @@ TOOL_SCHEMAS = [
         "function": {
             "name": "scan_wifi_devices",
             "description": "Scans local Wi-Fi network ARP table to inspect connected IP addresses and MAC addresses.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "set_voice_settings",
+            "description": "Adjusts Luna's speech synthesis parameters (rate, pitch, gender).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "rate": {
+                        "type": "integer",
+                        "description": "Speech rate in words per minute (default 175)."
+                    },
+                    "pitch": {
+                        "type": "integer",
+                        "description": "Pitch percentage (0-100)."
+                    },
+                    "voice_gender": {
+                        "type": "string",
+                        "description": "Voice gender ('female' or 'male')."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "summarize_pdf_book",
+            "description": "Reads and summarizes long PDF documents or books up to max_pages.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filepath": {
+                        "type": "string",
+                        "description": "Path to local PDF file."
+                    },
+                    "max_pages": {
+                        "type": "integer",
+                        "description": "Maximum pages to read (default 50)."
+                    }
+                },
+                "required": ["filepath"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_financial_quote",
+            "description": "Fetches real-time stock or cryptocurrency market quote data.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "symbol": {
+                        "type": "string",
+                        "description": "Ticker symbol (e.g. 'BTC', 'ETH', 'AAPL', 'NVDA')."
+                    }
+                },
+                "required": ["symbol"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_tech_news_digest",
+            "description": "Fetches top tech news headlines from Hacker News API.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "topic": {
+                        "type": "string",
+                        "description": "News topic (default 'technology')."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "crop_screen_region",
+            "description": "Crops a specific monitor region (x, y, width, height) and saves it for visual analysis.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "x": { "type": "integer" },
+                    "y": { "type": "integer" },
+                    "width": { "type": "integer" },
+                    "height": { "type": "integer" }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "toggle_focus_shield",
+            "description": "Enables or disables Pomodoro Daily Focus Shield to block online distractions.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "enable": { "type": "boolean" },
+                    "duration_minutes": { "type": "integer" }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "clean_junk_files",
+            "description": "Scans and removes temporary cache files and .tmp files to free up disk storage space.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "dirpath": { "type": "string" }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "run_network_speedtest",
+            "description": "Measures network ping latency, packet stability, and internet connection health.",
             "parameters": {
                 "type": "object",
                 "properties": {},

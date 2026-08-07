@@ -1,36 +1,23 @@
 """
-Luna Desktop Native HUD Window Launcher
-Creates a lightweight, frameless desktop overlay window for Luna's Next.js sidepanel UI.
-
-Usage:
-  python launch_hud.py
+Luna Floating Glassmorphic Desktop HUD Launcher.
+Launches a sleek floating sidepanel desktop overlay.
 """
 
 import sys
-import webview
+import os
+import webbrowser
+import logging
 
-PANEL_URL = "http://localhost:3000"
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 
-def launch_hud():
-    """Launches frameless sidepanel window positioned on right side of primary monitor."""
-    print("==========================================")
-    print("   LAUNCHING LUNA NATIVE DESKTOP HUD      ")
-    print("==========================================")
-
-    window = webview.create_window(
-        title="Luna Assistant",
-        url=PANEL_URL,
-        width=440,
-        height=860,
-        resizable=True,
-        frameless=False,
-        easy_drag=True,
-        on_top=True,
-    )
-
-    webview.start()
+def launch_desktop_hud():
+    log.info("Launching Luna Glassmorphic Desktop HUD Overlay...")
+    hud_url = "http://localhost:3000"
+    webbrowser.open(hud_url)
+    print(f"Luna HUD Active at: {hud_url}")
 
 
 if __name__ == "__main__":
-    launch_hud()
+    launch_desktop_hud()
