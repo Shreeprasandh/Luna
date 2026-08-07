@@ -3,7 +3,7 @@ Tool Registry — central manager for tool schema definitions and execution disp
 Includes: Web search, Image search, File system, Gmail, Calendar, Browser automation,
 Code execution, Screen Vision inspection, Pixel Color Inspector, System Hardware monitor, Autonomous Git agent,
 Proactive Task Scheduler, App Launcher, Clipboard Manager, Network Diagnostics,
-System Audio controller, PDF Reader, Fast File Search, Webcam Vision, and Weather.
+System Audio controller, PDF Reader, Fast File Search, Webcam Vision, Weather, and PowerToys Awake.
 """
 
 import json
@@ -28,6 +28,7 @@ from tools.pdf_reader import read_pdf_file
 from tools.file_search import search_local_files
 from tools.webcam import capture_webcam_snapshot
 from tools.weather import get_weather
+from tools.powertoys import toggle_awake_mode
 
 log = logging.getLogger(__name__)
 
@@ -64,6 +65,7 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "search_local_files": search_local_files,
     "capture_webcam_snapshot": capture_webcam_snapshot,
     "get_weather": get_weather,
+    "toggle_awake_mode": toggle_awake_mode,
 }
 
 # OpenAI-compatible function tool definitions
@@ -624,6 +626,23 @@ TOOL_SCHEMAS = [
                     }
                 },
                 "required": ["city"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "toggle_awake_mode",
+            "description": "Prevents PC from going to sleep or turning off screen (PowerToys Awake utility).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "enable": {
+                        "type": "boolean",
+                        "description": "True to keep PC awake, False to restore normal sleep timer."
+                    }
+                },
+                "required": []
             }
         }
     }

@@ -125,6 +125,14 @@ def test_weather_tool():
     assert "temperature_celsius" in res
 
 
+def test_powertoys_awake_tool():
+    from tools.powertoys import toggle_awake_mode
+    res = toggle_awake_mode(True)
+    assert res["status"] == "success"
+    assert res["awake_enabled"] is True
+
+
+
 
 
 
