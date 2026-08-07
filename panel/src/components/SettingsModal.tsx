@@ -137,24 +137,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
-          {/* Security & System Info */}
-          <div className="border-t border-[var(--border)] pt-3 text-[11px] text-[var(--text-secondary)] space-y-1">
-            <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-primary)]">
-              <Shield className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Security & Master Rules</span>
+          {/* Security Status - Secrets Hidden */}
+          <div className="border-t border-[var(--border)] pt-3 text-[11px] text-[var(--text-secondary)] space-y-1.5">
+            <div className="flex items-center justify-between text-xs font-medium text-[var(--text-primary)]">
+              <div className="flex items-center gap-1.5">
+                <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Security Protection Status</span>
+              </div>
+              <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                ACTIVE
+              </span>
             </div>
-            <div className="flex justify-between">
-              <span>Mobile Access PIN:</span>
-              <span className="font-mono text-[var(--text-primary)]">100307</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Magic Identity Word:</span>
-              <span className="font-mono text-[var(--text-primary)]">lusu</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Emergency Password:</span>
-              <span className="font-mono text-[var(--text-primary)]">ONE PIECE</span>
-            </div>
+            <p className="text-[10px] text-[var(--text-secondary)] leading-relaxed">
+              Master Access Credentials & Administrative Secrets are securely encrypted in server environment variables.
+            </p>
           </div>
 
           <button
