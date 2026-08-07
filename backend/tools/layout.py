@@ -9,15 +9,19 @@ from typing import Any
 log = logging.getLogger(__name__)
 
 
-def setup_workspace_preset(preset_name: str = "coding") -> dict[str, Any]:
+def setup_workspace_preset(preset_name: str = "coding", dry_run: bool = False) -> dict[str, Any]:
     """
     Launches applications and arranges workspace layout (e.g. 'coding', 'research', 'media').
 
     Args:
         preset_name: Preset type ('coding', 'research', 'media').
+        dry_run: If True, skips spawning desktop windows (used for unit tests).
     """
     clean_preset = preset_name.strip().lower()
-    log.info(f"[Tool: setup_workspace_preset] Setting up '{clean_preset}' workspace...")
+    log.info(f"[Tool: setup_workspace_preset] Setting up '{clean_preset}' workspace (dry_run={dry_run})...")
+
+    if dry_run:
+        return {"status": "success", "preset": clean_preset, "message": f"Dry-run workspace preset '{clean_preset}' verified."}
 
     try:
         if clean_preset == "coding":

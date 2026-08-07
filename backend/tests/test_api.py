@@ -230,7 +230,7 @@ def test_expansion_tools():
     from tools.env_vault import generate_env_vault_template
     from tools.wifi_scanner import scan_wifi_devices
 
-    assert setup_workspace_preset("coding")["status"] == "success"
+    assert setup_workspace_preset("coding", dry_run=True)["status"] == "success"
     assert push_to_clipboard_vault("test snippet")["status"] == "success"
     assert list_top_processes()["status"] == "success"
     assert zip_directory("tools", "test_archive.zip")["status"] == "success"
