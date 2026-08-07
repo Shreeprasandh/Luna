@@ -1,6 +1,7 @@
 """
 Tool Registry — central manager for tool schema definitions and execution dispatch.
-Includes: Web search, Image search, File system, Gmail, and Google Calendar tools.
+Includes: Web search, Image search, File system, Gmail, Calendar, Browser automation,
+Code execution, and Screen Vision inspection tools.
 """
 
 import json
@@ -11,6 +12,9 @@ from tools.search import web_search, image_search
 from tools.files import read_file, write_file, list_directory
 from tools.gmail import list_unread_emails, send_email
 from tools.calendar import list_calendar_events, create_calendar_event
+from tools.browser import browse_url, take_screenshot
+from tools.code import execute_python_code
+from tools.screen import capture_desktop_screen, analyze_screen_image
 
 log = logging.getLogger(__name__)
 
@@ -25,6 +29,11 @@ _TOOL_MAP: dict[str, Callable[..., dict[str, Any]]] = {
     "send_email": send_email,
     "list_calendar_events": list_calendar_events,
     "create_calendar_event": create_calendar_event,
+    "browse_url": browse_url,
+    "take_screenshot": take_screenshot,
+    "execute_python_code": execute_python_code,
+    "capture_desktop_screen": capture_desktop_screen,
+    "analyze_screen_image": analyze_screen_image,
 }
 
 # OpenAI-compatible function tool definitions
@@ -203,6 +212,99 @@ TOOL_SCHEMAS = [
                     }
                 },
                 "required": ["summary", "start_time", "end_time"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "browse_url",
+            "description": "Navigates to a webpage using Playwright headless browser and extracts its text content.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "The webpage URL to visit and scrape."
+                    }
+                },
+                "required": ["url"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "take_screenshot",
+            "description": "Captures a visual screenshot of a webpage and saves it locally.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "The webpage URL to capture."
+                    },
+                    "save_path": {
+                        "type": "string",
+                        "description": "Destination file path (default 'design/page_preview.png')."
+                    }
+                },
+                "required": ["url"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "execute_python_code",
+            "description": "Executes a Python code snippet in an isolated sandbox and returns stdout/stderr.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "The Python code snippet to execute."
+                    }
+                },
+                "required": ["code"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "capture_desktop_screen",
+            "description": "Captures a full screenshot of the user's primary monitor screen.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "save_path": {
+                        "type": "string",
+                        "description": "Destination file path for screenshot (default 'design/screen_capture.png')."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "analyze_screen_image",
+            "description": "Uses Gemini Multimodal Vision to inspect and analyze an image file (e.g. desktop screenshot or page capture).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "image_path": {
+                        "type": "string",
+                        "description": "File path to the image to analyze."
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "description": "What to look for or question about the visual screen content."
+                    }
+                },
+                "required": ["image_path"]
             }
         }
     }
