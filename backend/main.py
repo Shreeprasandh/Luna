@@ -52,7 +52,8 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     session_id: str
     text: str
-    type: str = "text"  # "text" | "image" | "code" — extended by tools later
+    type: str = "text"  # "text" | "image" | "code"
+    images: list[dict] | None = None
 
 
 class SessionResponse(BaseModel):
@@ -77,19 +78,19 @@ def session_start():
 
 @app.post("/session/end")
 def session_end(body: SessionResponse):
-    """Ends a session. Summarisation will be triggered here in a later phase."""
+    """Ends a session and triggers automatic memory summarisation."""
     end_session(body.session_id)
     return {"status": "ended", "session_id": body.session_id}
 
 
 @app.post("/chat", response_model=ChatResponse)
 def chat_turn(body: ChatRequest):
-    """Processes one user message and returns Luna's response."""
+    """Processes one user message, executes any tool calls, and returns Luna's response."""
     if not body.text.strip():
         raise HTTPException(status_code=400, detail="Text must not be empty.")
 
     try:
-        response = process_message(body.session_id, body.text.strip())
+        res = process_message(body.session_id, body.text.strip())
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except RuntimeError as e:
@@ -97,6 +98,8 @@ def chat_turn(body: ChatRequest):
 
     return ChatResponse(
         session_id=body.session_id,
-        text=response,
-        type="text",
+        text=res.get("text", ""),
+        type=res.get("type", "text"),
+        images=res.get("images"),
     )
+

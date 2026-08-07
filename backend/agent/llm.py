@@ -1,21 +1,21 @@
 """
-LLM Provider — three-tier fallback chain.
+LLM Provider — three-tier fallback chain with tool calling support.
 
 Priority:
-  1. Groq API       (primary — fastest, generous free tier)
+  1. Groq API       (primary — fastest, supports tool calling)
   2. Gemini API     (fallback — Google, hackathon-ready)
-  3. Ollama         (offline fallback — local models, zero cost)
-
-Switching between providers requires no changes to callers.
-All providers return a plain string response.
+  3. Ollama         (offline fallback — local models)
 """
 
 import os
+import json
 import logging
-from typing import Generator
+from typing import Any
 
 from dotenv import load_dotenv
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+
+from tools.registry import TOOL_SCHEMAS
 
 load_dotenv()
 log = logging.getLogger(__name__)
@@ -25,19 +25,48 @@ log = logging.getLogger(__name__)
 # Provider implementations
 # ─────────────────────────────────────────────────────────────
 
-def _call_groq(messages: list[dict], max_tokens: int) -> str:
+def _call_groq(messages: list[dict], max_tokens: int, tools: list[dict] | None = None) -> dict[str, Any]:
     from groq import Groq
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-    response = client.chat.completions.create(
-        model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-        messages=messages,
-        max_tokens=max_tokens,
-        temperature=0.7,
-    )
-    return response.choices[0].message.content.strip()
+    
+    # Use llama-3.1-8b-instant for fast, reliable function calling on Groq
+    model_name = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+    
+    kwargs = {
+        "model": model_name,
+        "messages": messages,
+        "max_tokens": max_tokens,
+        "temperature": 0.3,
+    }
+    if tools:
+        kwargs["tools"] = tools
+
+    response = client.chat.completions.create(**kwargs)
+    msg = response.choices[0].message
+
+    if msg.tool_calls:
+        tool_calls_data = []
+        for tc in msg.tool_calls:
+            tool_calls_data.append({
+                "id": tc.id,
+                "name": tc.function.name,
+                "arguments": tc.function.arguments,
+            })
+        return {
+            "type": "tool_calls",
+            "content": msg.content or "",
+            "tool_calls": tool_calls_data,
+            "raw_message": msg,
+        }
+    
+    return {
+        "type": "text",
+        "content": (msg.content or "").strip(),
+    }
 
 
-def _call_gemini(messages: list[dict], max_tokens: int) -> str:
+
+def _call_gemini(messages: list[dict], max_tokens: int, tools: list[dict] | None = None) -> dict[str, Any]:
     import google.generativeai as genai
     genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
@@ -46,14 +75,13 @@ def _call_gemini(messages: list[dict], max_tokens: int) -> str:
         generation_config=genai.GenerationConfig(max_output_tokens=max_tokens),
     )
 
-    # Convert OpenAI-style messages to Gemini format
     system_prompt = ""
     history = []
     last_user_msg = ""
 
     for msg in messages:
-        role = msg["role"]
-        content = msg["content"]
+        role = msg.get("role")
+        content = msg.get("content", "")
         if role == "system":
             system_prompt = content
         elif role == "user":
@@ -65,17 +93,23 @@ def _call_gemini(messages: list[dict], max_tokens: int) -> str:
 
     full_prompt = f"{system_prompt}\n\n{last_user_msg}" if system_prompt else last_user_msg
     response = model.generate_content(full_prompt)
-    return response.text.strip()
+    return {
+        "type": "text",
+        "content": (response.text or "").strip(),
+    }
 
 
-def _call_ollama(messages: list[dict], max_tokens: int) -> str:
+def _call_ollama(messages: list[dict], max_tokens: int, tools: list[dict] | None = None) -> dict[str, Any]:
     import ollama
     response = ollama.chat(
         model=os.getenv("OLLAMA_MODEL", "qwen2.5:4b"),
         messages=messages,
         options={"num_predict": max_tokens},
     )
-    return response["message"]["content"].strip()
+    return {
+        "type": "text",
+        "content": response["message"]["content"].strip(),
+    }
 
 
 # ─────────────────────────────────────────────────────────────
@@ -88,34 +122,36 @@ def _call_ollama(messages: list[dict], max_tokens: int) -> str:
     retry=retry_if_exception_type(Exception),
     reraise=True,
 )
-def _try_groq(messages: list[dict], max_tokens: int) -> str:
-    return _call_groq(messages, max_tokens)
+def _try_groq(messages: list[dict], max_tokens: int, tools: list[dict] | None = None) -> dict[str, Any]:
+    return _call_groq(messages, max_tokens, tools)
 
 
 def chat(
     messages: list[dict],
     max_tokens: int | None = None,
-) -> str:
+    with_tools: bool = True,
+) -> dict[str, Any] | str:
     """
     Sends messages to the LLM using the three-tier fallback chain.
 
     Args:
-        messages: List of {"role": "system"|"user"|"assistant", "content": str}
-        max_tokens: Maximum output tokens. Defaults to env MAX_OUTPUT_TOKENS.
+        messages: List of message dicts.
+        max_tokens: Max output tokens.
+        with_tools: Whether to enable tool definitions.
 
     Returns:
-        Plain string response from whichever provider succeeded.
-
-    Raises:
-        RuntimeError: If all three providers fail.
+        Dict with 'type' ('text' or 'tool_calls') and payload. If called without tools,
+        or as legacy fallback, returns dict or string.
     """
     limit = max_tokens or int(os.getenv("MAX_OUTPUT_TOKENS", "1000"))
+    tools_def = TOOL_SCHEMAS if with_tools else None
     errors = []
 
     # Tier 1 — Groq
     try:
         log.debug("LLM: trying Groq")
-        return _try_groq(messages, limit)
+        res = _try_groq(messages, limit, tools_def)
+        return res
     except Exception as e:
         log.warning(f"Groq failed: {e}")
         errors.append(f"Groq: {e}")
@@ -123,19 +159,19 @@ def chat(
     # Tier 2 — Gemini
     try:
         log.debug("LLM: falling back to Gemini")
-        return _call_gemini(messages, limit)
+        res = _call_gemini(messages, limit, tools_def)
+        return res
     except Exception as e:
         log.warning(f"Gemini failed: {e}")
         errors.append(f"Gemini: {e}")
 
-    # Tier 3 — Ollama (local)
+    # Tier 3 — Ollama
     try:
         log.debug("LLM: falling back to local Ollama")
-        return _call_ollama(messages, limit)
+        res = _call_ollama(messages, limit, tools_def)
+        return res
     except Exception as e:
         log.warning(f"Ollama failed: {e}")
         errors.append(f"Ollama: {e}")
 
-    raise RuntimeError(
-        "All LLM providers failed.\n" + "\n".join(errors)
-    )
+    raise RuntimeError("All LLM providers failed.\n" + "\n".join(errors))

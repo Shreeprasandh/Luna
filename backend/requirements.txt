@@ -26,3 +26,5 @@ pydantic==2.10.4
 
 # Utilities
 tenacity==9.0.0
+duckduckgo-search>=6.0.0
+
