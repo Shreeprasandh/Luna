@@ -147,6 +147,15 @@ def chat(
     tools_def = TOOL_SCHEMAS if with_tools else None
     errors = []
 
+    # Fast Conversational Guard for simple greetings (zero token cost, instant response)
+    last_msg = (messages[-1].get("content", "") if messages else "").strip().lower()
+    GREETINGS = {"hi", "hello", "hey", "hi luna", "hello luna", "hey luna", "who are you"}
+    if last_msg in GREETINGS:
+        return {
+            "type": "text",
+            "content": "Hello, Sir! I am Luna, your personal AI assistant. How may I assist you today?"
+        }
+
     # Tier 1 — Groq
     try:
         log.debug("LLM: trying Groq")
