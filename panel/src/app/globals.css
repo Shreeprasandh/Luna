@@ -132,3 +132,12 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--border-strong);
 }
+
+/* Hide Next.js Dev Badge & Toast Overlay */
+[data-nextjs-toast],
+[data-nextjs-dialog-header],
+#__next-build-watcher,
+next-route-announcer,
+a[href*="nextjs.org"] {
+  display: none !important;
+}
