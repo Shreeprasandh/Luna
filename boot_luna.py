@@ -76,7 +76,10 @@ def boot():
 
     # 4. Launch Native Windows Desktop Floating Glass Orb
     log.info("4/4 Launching Native Windows Desktop Floating Glass Orb Widget...")
-    orb_cmd = [VENV_PYTHON, "desktop_orb.py"]
+    PYTHONW = os.path.join(BACKEND_DIR, "venv", "Scripts", "pythonw.exe")
+    if not os.path.exists(PYTHONW):
+        PYTHONW = "pythonw.exe"
+    orb_cmd = [PYTHONW, "desktop_orb.py"]
     orb_proc = subprocess.Popen(
         orb_cmd,
         cwd=ROOT_DIR,
