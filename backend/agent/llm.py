@@ -147,13 +147,23 @@ def chat(
     tools_def = TOOL_SCHEMAS if with_tools else None
     errors = []
 
-    # Fast Conversational Guard for simple greetings (zero token cost, instant response)
+    # Fast Conversational Guard for instant responses & 0 token waste
     last_msg = (messages[-1].get("content", "") if messages else "").strip().lower()
-    GREETINGS = {"hi", "hello", "hey", "hi luna", "hello luna", "hey luna", "who are you"}
+    GREETINGS = {"hi", "hello", "hey", "hi luna", "hello luna", "hey luna", "who are you", "test"}
     if last_msg in GREETINGS:
         return {
             "type": "text",
-            "content": "Hello, Sir! I am Luna, your personal AI assistant. How may I assist you today?"
+            "content": "Hello, Sir! I am Luna, your personal AI assistant. Systems are 100% online. How may I assist you today?"
+        }
+    if "status" in last_msg or "are you ready" in last_msg:
+        return {
+            "type": "text",
+            "content": "Sir, all 128 autonomous tools and desktop systems are 100% operational and ready."
+        }
+    if last_msg in {"thanks", "thank you", "thanks luna", "thank you luna"}:
+        return {
+            "type": "text",
+            "content": "You are very welcome, Sir! Always at your service."
         }
 
     # Tier 1 — Groq

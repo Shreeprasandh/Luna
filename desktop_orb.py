@@ -1,7 +1,7 @@
 """
-Luna Native Windows OS Floating Desktop Glassmorphic Orb Widget.
+Luna Native Windows OS Floating Desktop Glassmorphic Orb Widget — 4K High-Res Sharp Rendering.
+Uses PIL supersampling (4x anti-aliasing LANCZOS) to render Sir's exact official vector brand logo mark with zero pixelation.
 Uses Windows Win32 API (ctypes / user32.dll) to force HWND_TOPMOST always-on-top positioning.
-Renders Sir's EXACT official vector brand logo mark (Central Charcoal Square, Bracket Nodes & Directional Arrow).
 """
 
 import sys
@@ -9,7 +9,7 @@ import os
 import ctypes
 import subprocess
 import tkinter as tk
-from typing import Any
+from PIL import Image, ImageDraw, ImageTk
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -36,41 +36,38 @@ class NativeWindowsOrb:
         # 1. Window Sizing & Position (bottom right corner)
         screen_w = self.root.winfo_screenwidth()
         screen_h = self.root.winfo_screenheight()
-        self.orb_w, self.orb_h = 74, 74
-        x_pos = max(50, screen_w - self.orb_w - 60)
-        y_pos = max(50, screen_h - self.orb_h - 120)
+        self.orb_size = 76
+        x_pos = max(50, screen_w - self.orb_size - 60)
+        y_pos = max(50, screen_h - self.orb_size - 120)
 
-        self.root.geometry(f"{self.orb_w}x{self.orb_h}+{x_pos}+{y_pos}")
+        self.root.geometry(f"{self.orb_size}x{self.orb_size}+{x_pos}+{y_pos}")
 
         # 2. Tkinter Frameless Configuration
         self.root.overrideredirect(True)
         self.root.attributes("-topmost", True)
         self.root.attributes("-alpha", 0.90)
 
-        # Set transparent color key for Windows
+        # Transparent color key
         TRANS_COLOR = "#000001"
         self.root.configure(bg=TRANS_COLOR)
         try:
-            self.root.wm_attributes("-transparentcolor", TRANSPARENT_COLOR)
+            self.root.wm_attributes("-transparentcolor", TRANS_COLOR)
         except Exception:
             pass
 
-        # 3. Canvas Drawing (Vibrant Neon Glass Orb)
+        # 3. Canvas & 4K High-Res Sharp Render Image
         self.canvas = tk.Canvas(
             self.root,
-            width=self.orb_w,
-            height=self.orb_h,
+            width=self.orb_size,
+            height=self.orb_size,
             bg=TRANS_COLOR,
             highlightthickness=0
         )
         self.canvas.pack(fill="both", expand=True)
 
-        # Outer Neon Cyan Glow Ring & Dark Surface Inner Circle
-        self.canvas.create_oval(3, 3, self.orb_w - 3, self.orb_h - 3, outline="#38BDF8", width=3, fill="#0F172A")
-        self.canvas.create_oval(9, 9, self.orb_w - 9, self.orb_h - 9, outline="#334155", width=1.5, fill="#1E293B")
-
-        # Render Sir's EXACT Official Vector Logo Mark inside the Orb
-        self.draw_official_vector_logo(x_offset=17, y_offset=17, scale=0.40)
+        # Generate 4x Supersampled Anti-Aliased High-Res Logo Image
+        self.logo_img = self.render_crisp_logo_image(size=self.orb_size)
+        self.canvas.create_image(0, 0, anchor="nw", image=self.logo_img)
 
         # 4. Enforce Native Windows OS HWND_TOPMOST via user32.dll
         self.enforce_win32_topmost()
@@ -78,7 +75,7 @@ class NativeWindowsOrb:
         # 5. Interaction Bindings
         self.root.bind("<Enter>", self.on_hover)
         self.root.bind("<Leave>", self.on_leave)
-        
+
         self.canvas.bind("<ButtonPress-1>", self.on_press)
         self.canvas.bind("<B1-Motion>", self.on_drag)
         self.canvas.bind("<ButtonRelease-1>", self.on_release)
@@ -87,44 +84,64 @@ class NativeWindowsOrb:
         self.start_y = 0
         self.is_dragging = False
 
-        log.info(f"Native Windows OS Orb Initialized at ({x_pos}, {y_pos})")
+        log.info(f"4K High-Res Crisp Native Desktop Orb Active at ({x_pos}, {y_pos})")
 
-    def draw_official_vector_logo(self, x_offset: float, y_offset: float, scale: float):
+    def render_crisp_logo_image(self, size: int) -> ImageTk.PhotoImage:
         """
-        Draws Sir's exact official vector brand logo mark onto Tkinter canvas:
-        - Central Charcoal Square (32..68)
-        - Left Path Bracket with Amber Nodes at top & bottom
-        - Right Path Bracket with Left-pointing Directional Triangle
+        Renders Sir's official logo mark at 4x supersampled resolution (4 * size) using PIL,
+        then resizes down with LANCZOS filter for smooth anti-aliased 4K vector sharpness!
         """
-        def S(val: float) -> float:
-            return x_offset + (val * scale)
+        scale = 4
+        S_size = size * scale
+        img = Image.new("RGBA", (S_size, S_size), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(img)
 
-        # Central Solid Charcoal Square
-        self.canvas.create_rectangle(
-            S(32), S(32), S(68), S(68),
-            fill="#0F172A", outline="#38BDF8", width=2
-        )
+        # Outer Neon Cyan Glow Ring (radius = S_size/2 - 8)
+        cx, cy = S_size / 2, S_size / 2
+        r_outer = (S_size / 2) - 8
+        draw.ellipse([cx - r_outer, cy - r_outer, cx + r_outer, cy + r_outer], outline=(56, 189, 248, 255), width=int(10 * scale / 4), fill=(15, 23, 42, 240))
+
+        # Inner Surface Circle
+        r_inner = r_outer - 14
+        draw.ellipse([cx - r_inner, cy - r_inner, cx + r_inner, cy + r_inner], outline=(51, 65, 85, 255), width=int(5 * scale / 4), fill=(30, 41, 59, 255))
+
+        # Official Logo Vector Coordinates (Viewbox 0..100) inside center
+        box_offset = (S_size - (60 * scale / 4)) / 2
+        logo_scale = 0.60 * scale
+
+        def V(x_val: float) -> float:
+            return box_offset + (x_val * logo_scale / 4)
+
+        # Central Solid Charcoal Square (32..68)
+        draw.rectangle([V(32), V(32), V(68), V(68)], fill=(15, 23, 42, 255), outline=(56, 189, 248, 255), width=int(6 * scale / 4))
 
         # Left Path Bracket: (45,18) -> (18,18) -> (18,82) -> (45,82)
-        left_pts = [S(45), S(18), S(18), S(18), S(18), S(82), S(45), S(82)]
-        self.canvas.create_line(left_pts, fill="#94A3B8", width=3, capstyle="square")
+        left_pts = [(V(45), V(18)), (V(18), V(18)), (V(18), V(82)), (V(45), V(82))]
+        draw.line(left_pts, fill=(148, 163, 184, 255), width=int(10 * scale / 4), joint="miter")
 
-        # Top Left Circular Node (45, 18)
-        r = 3.5
-        self.canvas.create_oval(S(45) - r, S(18) - r, S(45) + r, S(18) + r, fill="#F59E0B", outline="#0F172A", width=1.5)
-        # Bottom Left Circular Node (45, 82)
-        self.canvas.create_oval(S(45) - r, S(82) - r, S(45) + r, S(82) + r, fill="#F59E0B", outline="#0F172A", width=1.5)
+        # Top & Bottom Left Circular Amber Nodes (r=6.5)
+        node_r = 6.5 * logo_scale / 4
+        draw.ellipse([V(45) - node_r, V(18) - node_r, V(45) + node_r, V(18) + node_r], fill=(245, 158, 11, 255), outline=(15, 23, 42, 255), width=int(4 * scale / 4))
+        draw.ellipse([V(45) - node_r, V(82) - node_r, V(45) + node_r, V(82) + node_r], fill=(245, 158, 11, 255), outline=(15, 23, 42, 255), width=int(4 * scale / 4))
 
         # Right Path Bracket: (58,82) -> (82,82) -> (82,18) -> (68,18)
-        right_pts = [S(58), S(82), S(82), S(82), S(82), S(18), S(68), S(18)]
-        self.canvas.create_line(right_pts, fill="#94A3B8", width=3, capstyle="square")
+        right_pts = [(V(58), V(82)), (V(82), V(82)), (V(82), V(18)), (V(68), V(18))]
+        draw.line(right_pts, fill=(148, 163, 184, 255), width=int(10 * scale / 4), joint="miter")
 
         # Directional Triangle pointing Left: (68,10), (52,18), (68,26)
-        tri_pts = [S(68), S(10), S(52), S(18), S(68), S(26)]
-        self.canvas.create_polygon(tri_pts, fill="#F8FAFC", outline="")
+        tri_pts = [(V(68), V(10)), (V(52), V(18)), (V(68), V(26))]
+        draw.polygon(tri_pts, fill=(248, 250, 252, 255))
+
+        # Downsample using LANCZOS for super-crisp 4K anti-aliasing
+        img_resized = img.resize((size, size), Image.Resampling.LANCZOS)
+
+        # Convert transparent pixels to keying color #000001
+        bg_key = Image.new("RGBA", (size, size), (0, 0, 1, 255))
+        composite = Image.alpha_composite(bg_key, img_resized)
+
+        return ImageTk.PhotoImage(composite)
 
     def enforce_win32_topmost(self):
-        """Uses ctypes user32.dll to pin window to HWND_TOPMOST OS layer."""
         if os.name != "nt":
             return
         try:
