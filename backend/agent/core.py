@@ -99,13 +99,14 @@ def process_message(session_id: str, user_text: str) -> dict[str, Any]:
             "type": "text",
         }
 
-    # Retrieve relevant memories from Supabase
+    # Retrieve relevant memories from Supabase (only for queries > 3 words)
     memories: list[str] = []
-    try:
-        from agent.memory import retrieve_relevant_memories
-        memories = retrieve_relevant_memories(user_text)
-    except Exception as e:
-        log.warning(f"Memory retrieval skipped: {e}")
+    if len(user_text.strip().split()) > 3:
+        try:
+            from agent.memory import retrieve_relevant_memories
+            memories = retrieve_relevant_memories(user_text)
+        except Exception as e:
+            log.warning(f"Memory retrieval skipped: {e}")
 
     system_prompt = build_system_prompt(memories=memories if memories else None)
     working_memory = _sessions[session_id][-MAX_WORKING_MEMORY_TURNS * 2:]
