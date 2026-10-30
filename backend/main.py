@@ -39,9 +39,11 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=".*",
+    allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 app.include_router(metrics_router)
@@ -121,6 +123,12 @@ def chat_turn(body: ChatRequest):
         raise HTTPException(status_code=404, detail=str(e))
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        log.error(f"Chat turn error: {e}")
+        res = {
+            "text": "Sir, I encountered a temporary network glitch while processing your request. Please try again.",
+            "type": "text"
+        }
 
     return ChatResponse(
         session_id=body.session_id,

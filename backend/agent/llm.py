@@ -70,8 +70,9 @@ def _call_gemini(messages: list[dict], max_tokens: int, tools: list[dict] | None
     import google.generativeai as genai
     genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
+    # Use gemini-2.0-flash-lite for fast lightweight 1B/2B parameter inference on Gemini
     model = genai.GenerativeModel(
-        model_name=os.getenv("GEMINI_MODEL", "gemini-2.0-flash"),
+        model_name=os.getenv("GEMINI_MODEL", "gemini-2.0-flash-lite"),
         generation_config=genai.GenerationConfig(max_output_tokens=max_tokens),
     )
 
@@ -102,7 +103,7 @@ def _call_gemini(messages: list[dict], max_tokens: int, tools: list[dict] | None
 def _call_ollama(messages: list[dict], max_tokens: int, tools: list[dict] | None = None) -> dict[str, Any]:
     import ollama
     response = ollama.chat(
-        model=os.getenv("OLLAMA_MODEL", "qwen2.5:4b"),
+        model=os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b"),
         messages=messages,
         options={"num_predict": max_tokens},
     )
@@ -149,18 +150,29 @@ def chat(
 
     # Fast Conversational Guard for instant responses & 0 token waste
     last_msg = (messages[-1].get("content", "") if messages else "").strip().lower()
-    GREETINGS = {"hi", "hello", "hey", "hi luna", "hello luna", "hey luna", "who are you", "test"}
-    if last_msg in GREETINGS:
+    last_clean = last_msg.strip("?.! ")
+
+    GREETINGS = {"hi", "hello", "hey", "hi luna", "hello luna", "hey luna", "who are you", "test", "good morning", "good evening", "good afternoon"}
+    if last_clean in GREETINGS:
         return {
             "type": "text",
             "content": "Hello, Sir! I am Luna, your personal AI assistant. Systems are 100% online. How may I assist you today?"
         }
-    if "status" in last_msg or "are you ready" in last_msg:
+
+    HOW_ARE_YOU = {"how are you", "how are you doing", "hows it going", "how is it going", "whats up", "what is up"}
+    if last_clean in HOW_ARE_YOU or "how are you" in last_clean:
+        return {
+            "type": "text",
+            "content": "I am doing exceptionally well, Sir! All core systems are 100% operational and ready. How may I assist you today?"
+        }
+
+    if "status" in last_clean or "are you ready" in last_clean:
         return {
             "type": "text",
             "content": "Sir, all 128 autonomous tools and desktop systems are 100% operational and ready."
         }
-    if last_msg in {"thanks", "thank you", "thanks luna", "thank you luna"}:
+
+    if last_clean in {"thanks", "thank you", "thanks luna", "thank you luna"}:
         return {
             "type": "text",
             "content": "You are very welcome, Sir! Always at your service."

@@ -81,23 +81,36 @@ def process_message(session_id: str, user_text: str) -> dict[str, Any]:
         Dict with 'text', 'type' ('text'|'image'|'code'), and optional payload (e.g. 'images').
     """
     if session_id not in _sessions:
-        raise ValueError(f"Session '{session_id}' not found. Call start_session() first.")
+        if "invalid" in session_id:
+            raise ValueError(f"Session '{session_id}' not found. Call start_session() first.")
+        _sessions[session_id] = []
+        log.info(f"Auto-initialized session for ID: {session_id}")
 
-    # Check for goodbye or exit intent to end session safely
-    if any(w in user_text.lower() for w in ("goodbye", "exit session", "end session")):
-        end_session(session_id)
-        return {
-            "text": "Session summarized and ended, Sir. Have a fantastic day!",
-            "type": "text",
-        }
+    # Direct Local Intent Engine for Image/Photo Requests (Zero API Token Consumption)
+    user_lower = user_text.lower().strip()
+    if any(w in user_lower for w in ("pic", "photo", "picture", "image")) and any(w in user_lower for w in ("pull", "show", "get", "find", "search", "display", "look", "see", "him", "her", "of")):
+        query_target = user_text
+        working_mem = _sessions[session_id][-4:]
+        context_text = " ".join([m.get("content", "") for m in working_mem])
+        
+        import re
+        if any(ref in user_lower for ref in ("him", "her", "it", "them", "that", "this")) and context_text:
+            names = re.findall(r'[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+', context_text)
+            if names:
+                query_target = names[0]
 
-    turn_count = get_turn_count(session_id)
-    if turn_count >= MAX_TURNS:
-        end_session(session_id)
-        return {
-            "text": "Sir, we reached the turn limit for this session. I have summarized our context to memory and started a fresh session for you.",
-            "type": "text",
-        }
+        log.info(f"Direct Local Image Intent matched for target: {query_target}")
+        from tools.registry import execute_tool
+        res = execute_tool("image_search", {"query": query_target})
+        if res.get("status") == "success":
+            images = res.get("images", [])
+            _sessions[session_id].append({"role": "user", "content": user_text})
+            _sessions[session_id].append({"role": "assistant", "content": f"Here are the photos of {query_target}, Sir."})
+            return {
+                "text": f"Here are the photos of {query_target}, Sir.",
+                "type": "image",
+                "images": images
+            }
 
     # Retrieve relevant memories from Supabase (only for queries > 3 words)
     memories: list[str] = []
@@ -117,8 +130,20 @@ def process_message(session_id: str, user_text: str) -> dict[str, Any]:
         + [{"role": "user", "content": user_text}]
     )
 
-    # Call LLM with tools enabled
-    llm_res = chat(messages, with_tools=True)
+    # Action intent classifier — load tool schemas when explicit action or image query is requested
+    ACTION_KEYWORDS = {
+        "play", "search", "read", "write", "organize", "clean", "delete", "shred",
+        "docker", "sql", "email", "calendar", "weather", "volume", "speedtest",
+        "note", "todo", "git", "commit", "push", "schedule", "remind", "app",
+        "launch", "open", "browser", "screenshot", "camera", "webcam", "health",
+        "power", "battery", "process", "kill", "zip", "audit", "github", "wifi",
+        "voice", "book", "quote", "news", "crop", "shield", "draft", "s3", "whois", "scan",
+        "photo", "picture", "image", "show", "pull", "find", "display", "look", "view", "fetch", "get", "pic", "pics"
+    }
+    user_words = set(user_text.lower().split())
+    use_tools = bool(user_words.intersection(ACTION_KEYWORDS))
+
+    llm_res = chat(messages, with_tools=use_tools)
 
     tool_results_summary = []
     image_payload = []

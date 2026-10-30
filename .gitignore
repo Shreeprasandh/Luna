@@ -51,3 +51,8 @@ logs/
 
 # Docker
 *.tar
+
+# Research & Notebooks (The Alchemists & The Dumb)
+research/
+*MASTER_STUDY_NOTEBOOK.md
+LUNA_COCKPIT_HANDOFF.md
