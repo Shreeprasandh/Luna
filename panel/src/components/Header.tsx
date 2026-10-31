@@ -9,7 +9,9 @@ import {
   Radio, 
   Sparkles,
   Layers,
-  Terminal
+  Terminal,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 import { SettingsModal } from "./SettingsModal";
 
@@ -23,6 +25,8 @@ interface HeaderProps {
   onOpenSkillMatrix?: () => void;
   onToggleArtifactStudio?: () => void;
   isArtifactStudioOpen?: boolean;
+  isVoiceMuted?: boolean;
+  onToggleVoice?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -33,6 +37,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSkillMatrix,
   onToggleArtifactStudio,
   isArtifactStudioOpen = false,
+  isVoiceMuted = false,
+  onToggleVoice,
 }) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -62,7 +68,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span className={`w-2 h-2 rounded-full ${isBackendConnected ? "bg-emerald-400 animate-pulse" : "bg-rose-400"}`} />
           <span>{isBackendConnected ? "Kernel Online · 14ms" : "Reconnecting Substrate..."}</span>
           <span className="text-white/20">|</span>
-          <span className="text-white/40">768-d Vector Sync</span>
+          <span className="text-white/40">CLI Bridge Synced · 164 Skills</span>
         </div>
 
         {/* Action Controls */}
@@ -104,6 +110,31 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Terminal className="w-3.5 h-3.5 text-sky-400" />
               <span className="hidden sm:inline">Canvas</span>
+            </button>
+          )}
+
+          {/* Voice Mute / Unmute Toggle Button */}
+          {onToggleVoice && (
+            <button
+              onClick={onToggleVoice}
+              title={isVoiceMuted ? "Unmute Luna Voice" : "Mute Luna Voice"}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
+                !isVoiceMuted
+                  ? "bg-amber-400/15 border-amber-400/30 text-amber-300 shadow-sm"
+                  : "bg-white/[0.03] hover:bg-white/[0.08] border-white/[0.06] text-white/40 hover:text-white"
+              }`}
+            >
+              {!isVoiceMuted ? (
+                <>
+                  <Volume2 className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden sm:inline">Voice ON</span>
+                </>
+              ) : (
+                <>
+                  <VolumeX className="w-3.5 h-3.5 text-white/40" />
+                  <span className="hidden sm:inline">Muted</span>
+                </>
+              )}
             </button>
           )}
 

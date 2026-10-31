@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { Mic, Send, Sparkles, AudioWaveform } from "lucide-react";
+import { Mic, Send, Sparkles, AudioWaveform, Terminal, Zap } from "lucide-react";
 
 interface InputBarProps {
-  onSendMessage: (text: string) => void;
+  onSendMessage: (text: string, mode?: "fast" | "cli") => void;
   onVoiceToggle: () => void;
   isListening: boolean;
   disabled: boolean;
   audioLevel?: number;
+  execMode?: "fast" | "cli";
+  onToggleExecMode?: () => void;
 }
 
 export const InputBar: React.FC<InputBarProps> = ({
@@ -17,13 +19,15 @@ export const InputBar: React.FC<InputBarProps> = ({
   isListening,
   disabled,
   audioLevel = 0,
+  execMode = "fast",
+  onToggleExecMode,
 }) => {
   const [text, setText] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim() || disabled) return;
-    onSendMessage(text.trim());
+    onSendMessage(text.trim(), execMode);
     setText("");
   };
 
@@ -67,6 +71,36 @@ export const InputBar: React.FC<InputBarProps> = ({
             <span>⏎ send</span>
           </div>
         </div>
+
+        {/* CLI vs Fast Voice Mode Toggle */}
+        {onToggleExecMode && (
+          <button
+            type="button"
+            onClick={onToggleExecMode}
+            title={
+              execMode === "cli"
+                ? "Switch to Fast Voice Mode (Instant sub-200ms audio conversational response)"
+                : "Switch to CLI Mode (Dispatches directly to agy terminal agent)"
+            }
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-[11px] font-mono transition-all cursor-pointer ${
+              execMode === "cli"
+                ? "bg-sky-500/15 border-sky-500/30 text-sky-300 shadow-sm"
+                : "bg-amber-400/15 border-amber-400/30 text-amber-300"
+            }`}
+          >
+            {execMode === "cli" ? (
+              <>
+                <Terminal className="w-3.5 h-3.5 text-sky-400" />
+                <span className="hidden sm:inline">CLI Mode</span>
+              </>
+            ) : (
+              <>
+                <Zap className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">Fast Voice</span>
+              </>
+            )}
+          </button>
+        )}
 
         {/* Send Button */}
         <button

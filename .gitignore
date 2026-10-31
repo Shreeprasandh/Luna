@@ -45,9 +45,13 @@ desktop.ini
 *.swp
 *.swo
 
-# Logs
+# Logs & Databases
 *.log
 logs/
+*.db
+*.sqlite
+*.sqlite3
+.active_conversation
 
 # Docker
 *.tar

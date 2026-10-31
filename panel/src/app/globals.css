@@ -17,17 +17,17 @@
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-/* 1. OBSIDIAN SLATE (Default Dark) */
+/* 1. OBSIDIAN LUXURY (Default Dark) */
 [data-theme="dark"], :root {
-  --bg:              #222831;
-  --surface:         #393E46;
-  --surface-alt:     #2D3139;
-  --border:          rgba(148, 137, 121, 0.25);
-  --border-strong:   rgba(148, 137, 121, 0.50);
-  --text-primary:    #DFD0B8;
-  --text-secondary:  #948979;
-  --accent:          #C9B59C;
-  --code-bg:         #1A1E24;
+  --bg:              #07080A;
+  --surface:         #0D1017;
+  --surface-alt:     #141822;
+  --border:          rgba(255, 255, 255, 0.07);
+  --border-strong:   rgba(255, 255, 255, 0.15);
+  --text-primary:    #F0F3F8;
+  --text-secondary:  #858D98;
+  --accent:          #F5A623;
+  --code-bg:         #0A0C10;
 }
 
 /* 2. WARM PARCHMENT (Default Light) */

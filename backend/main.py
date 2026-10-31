@@ -20,9 +20,10 @@ from dotenv import load_dotenv
 
 from agent.core import start_session, end_session, process_message
 from routes.metrics import router as metrics_router
+from routes.cli_bridge import router as cli_bridge_router
 from tools.safety import is_safe_path
 
-load_dotenv()
+load_dotenv(override=True)
 
 
 logging.basicConfig(
@@ -47,6 +48,7 @@ app.add_middleware(
 )
 
 app.include_router(metrics_router)
+app.include_router(cli_bridge_router)
 
 
 # ─────────────────────────────────────────────────────────────

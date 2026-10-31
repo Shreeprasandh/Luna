@@ -19,20 +19,20 @@ else
 fi
 
 cd "$DIR/backend"
-"$PY" -m uvicorn main:app --host 0.0.0.0 --port 8000 > "$DIR/logs/backend.log" 2>&1 &
+nohup "$PY" -m uvicorn main:app --host 0.0.0.0 --port 8000 > "$DIR/logs/backend.log" 2>&1 &
 BACKEND_PID=$!
 echo "      Backend running (PID: $BACKEND_PID)"
 
 # 2. Start Next.js Cockpit Panel
-echo "[2/2] Launching Cockpit Interface on http://localhost:3000..."
+echo "[2/2] Launching Cockpit Interface on http://localhost:3001..."
 cd "$DIR/panel"
-npm run dev > "$DIR/logs/panel.log" 2>&1 &
+nohup npm run dev > "$DIR/logs/panel.log" 2>&1 &
 PANEL_PID=$!
 echo "      Cockpit UI running (PID: $PANEL_PID)"
 
 echo "========================================================"
 echo "Luna online, Sir."
-echo "Cockpit URL:  http://localhost:3000"
+echo "Cockpit URL:  http://localhost:3001"
 echo "Backend API:  http://localhost:8000"
 echo "PIDs:         Backend=$BACKEND_PID, Panel=$PANEL_PID"
 echo "To stop:      Run ./stop_luna.sh or kill PIDs"

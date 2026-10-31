@@ -10,6 +10,7 @@ import { MemoryVault } from "@/components/MemoryVault";
 import { SkillMatrix } from "@/components/SkillMatrix";
 import { ArtifactStudio, ArtifactData } from "@/components/ArtifactStudio";
 import { LockScreen } from "@/components/LockScreen";
+import { lunaSpeech } from "@/utils/speech";
 import { 
   Activity, 
   Sparkles, 
@@ -35,12 +36,14 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
 
   // Cognitive State & Real-Time Telemetry
   const [cognitiveState, setCognitiveState] = useState<CognitiveState>("idle");
   const [audioLevel, setAudioLevel] = useState<number>(0);
   const [isListening, setIsListening] = useState(false);
+  const [isVoiceMuted, setIsVoiceMuted] = useState(false);
+  const [execMode, setExecMode] = useState<"fast" | "cli">("fast");
   const [tokenVelocity, setTokenVelocity] = useState<number>(78);
   const [totalLatency, setTotalLatency] = useState<number>(142);
   const [thoughtStream, setThoughtStream] = useState<string[]>([
@@ -150,6 +153,38 @@ export default function Home() {
     initSession();
   }, [isAuthenticated]);
 
+  // Real-time Antigravity CLI Telemetry & Cognitive DAG Sync
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const backendUrl = getBackendUrl();
+
+    const fetchCliTelemetry = async () => {
+      try {
+        const res = await fetch(`${backendUrl}/cli/telemetry?limit=25`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === "synced") {
+            if (data.dag_nodes && data.dag_nodes.length > 0) {
+              setDagNodes(data.dag_nodes);
+            }
+            if (data.thought_stream && data.thought_stream.length > 0) {
+              setThoughtStream(data.thought_stream);
+            }
+            if (data.metrics?.token_velocity) {
+              setTokenVelocity(data.metrics.token_velocity);
+            }
+          }
+        }
+      } catch {
+        // Silent background fallback
+      }
+    };
+
+    fetchCliTelemetry();
+    const interval = setInterval(fetchCliTelemetry, 2500);
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
   // Audio stream setup when voice listening is active
   useEffect(() => {
     let animId: number;
@@ -208,10 +243,33 @@ export default function Home() {
     };
   }, [isListening]);
 
-  // Handle message submission
-  const handleSendMessage = async (text: string) => {
+  // Voice playback and mute handling
+  const handleToggleVoice = () => {
+    setIsVoiceMuted(prev => {
+      const next = !prev;
+      lunaSpeech.setMuted(next);
+      return next;
+    });
+  };
+
+  const handleSpeakMessage = (text: string) => {
+    if (isVoiceMuted) return;
+    setCognitiveState("speaking");
+    lunaSpeech.speak(text, {
+      onStart: () => setCognitiveState("speaking"),
+      onEnd: () => {
+        setCognitiveState("idle");
+        setAudioLevel(0);
+      },
+      onAudioPulse: (intensity) => setAudioLevel(intensity),
+    });
+  };
+
+  // Handle message submission (supports Fast Voice & Direct CLI Execution)
+  const handleSendMessage = async (text: string, modeOverride?: "fast" | "cli") => {
     const backendUrl = getBackendUrl();
     const currentSessionId = sessionId || "active-session";
+    const mode = modeOverride || execMode;
 
     const userMsg: Message = {
       id: String(Date.now()),
@@ -233,8 +291,8 @@ export default function Home() {
       ...prev,
       {
         id: intentNodeId,
-        name: `Intent Analysis [${text.slice(0, 24)}...]`,
-        type: "intent",
+        name: mode === "cli" ? `CLI Dispatch [${text.slice(0, 24)}...]` : `Intent Analysis [${text.slice(0, 24)}...]`,
+        type: mode === "cli" ? "tool" : "intent",
         status: "running",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
@@ -242,37 +300,51 @@ export default function Home() {
 
     setThoughtStream(prev => [
       ...prev,
-      `Analyzing directive: "${text}"`,
-      "Evaluating tool contracts against 60 registered handlers...",
+      mode === "cli" ? `Routing directive to Antigravity CLI (agy): "${text}"` : `Analyzing directive: "${text}"`,
+      mode === "cli" ? "Bridging IPC with terminal agent substrate..." : "Evaluating tool contracts against 164 registered handlers...",
     ]);
 
     const startTime = performance.now();
 
     try {
-      const res = await fetch(`${backendUrl}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: currentSessionId, text }),
-      });
+      let res;
+      if (mode === "cli") {
+        res = await fetch(`${backendUrl}/cli/dispatch`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: text, mode: "cli", session_id: currentSessionId }),
+        });
+      } else {
+        res = await fetch(`${backendUrl}/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id: currentSessionId, text }),
+        });
+      }
 
       const latency = Math.round(performance.now() - startTime);
       setTotalLatency(latency);
 
       if (res.ok) {
         const payload = await res.json();
+        const replyText = payload.text || payload.reply || "";
         
         // Update DAG node to success
         setDagNodes(prev =>
           prev.map(n => (n.id === intentNodeId ? { ...n, status: "success", durationMs: latency } : n))
         );
 
-        setCognitiveState("speaking");
-        setTimeout(() => setCognitiveState("idle"), 2500);
+        // Vocalize response through Web Speech engine
+        if (replyText && !isVoiceMuted) {
+          handleSpeakMessage(replyText);
+        } else {
+          setCognitiveState("idle");
+        }
 
         const assistantMsg: Message = {
           id: String(Date.now() + 1),
           role: "assistant",
-          text: payload.text || "",
+          text: replyText,
           type: payload.type || "text",
           images: payload.images || undefined,
           download_url: payload.download_url || undefined,
@@ -287,7 +359,7 @@ export default function Home() {
         setThoughtStream(prev => [
           ...prev,
           `Execution cycle completed · ${latency}ms latency`,
-          "Response delivered to user console.",
+          mode === "cli" ? "CLI subprocess output captured & delivered." : "Response delivered to user console.",
         ]);
       } else {
         throw new Error(`Server returned status ${res.status}`);
@@ -303,7 +375,7 @@ export default function Home() {
         {
           id: String(Date.now() + 2),
           role: "assistant",
-          text: "Sir, I encountered a connection interruption with the local kernel. Please verify FastAPI backend status.",
+          text: `Sir, I encountered a communication interruption with the kernel: ${err instanceof Error ? err.message : "Unknown error"}.`,
           timestamp: new Date().toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
@@ -339,6 +411,8 @@ export default function Home() {
         onOpenSkillMatrix={() => setIsSkillMatrixOpen(true)}
         onToggleArtifactStudio={() => setIsArtifactStudioOpen(prev => !prev)}
         isArtifactStudioOpen={isArtifactStudioOpen}
+        isVoiceMuted={isVoiceMuted}
+        onToggleVoice={handleToggleVoice}
       />
 
       {/* Main Command Station Viewport */}
@@ -383,7 +457,12 @@ export default function Home() {
 
           {/* Interactive Chat Stream */}
           <div className="flex-1 overflow-hidden flex flex-col">
-            <ChatArea messages={messages} isLoading={isLoading} />
+            <ChatArea 
+              messages={messages} 
+              isLoading={isLoading} 
+              onQuickPrompt={handleSendMessage} 
+              onSpeakMessage={handleSpeakMessage}
+            />
           </div>
 
           {/* Full-Duplex Input Console */}
@@ -393,6 +472,8 @@ export default function Home() {
             isListening={isListening}
             disabled={isLoading}
             audioLevel={audioLevel}
+            execMode={execMode}
+            onToggleExecMode={() => setExecMode(prev => prev === "fast" ? "cli" : "fast")}
           />
         </div>
 

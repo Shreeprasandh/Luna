@@ -283,14 +283,14 @@ export const NeuralCore: React.FC<NeuralCoreProps> = ({
       window.addEventListener("mousemove", handlePointerMove);
     }
 
-    // 6. 60 FPS Render Loop with Clock
-    const clock = new THREE.Clock();
+    // 6. 60 FPS Render Loop using High-Precision Performance Timestamp
+    const startTime = performance.now();
     let animationFrameId: number;
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
 
-      const elapsedTime = clock.getElapsedTime();
+      const elapsedTime = (performance.now() - startTime) * 0.001;
       uniformsRef.current.uTime.value = elapsedTime;
 
       // Base gentle rotation

@@ -194,7 +194,8 @@ def process_message(session_id: str, user_text: str) -> dict[str, Any]:
     _sessions[session_id].append({"role": "user", "content": user_text})
     _sessions[session_id].append({"role": "assistant", "content": final_text})
 
-    log.info(f"[{session_id}] Turn {turn_count + 1} complete")
+    current_turn = get_turn_count(session_id)
+    log.info(f"[{session_id}] Turn {current_turn} complete")
 
     response_dict = {
         "text": final_text,

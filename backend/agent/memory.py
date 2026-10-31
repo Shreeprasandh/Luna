@@ -10,12 +10,96 @@ No cloud embedding API is used — embeddings run 100% locally at zero cost.
 
 import logging
 import os
+import sqlite3
+import json
 from typing import Optional
 
 from dotenv import load_dotenv
 
 load_dotenv()
 log = logging.getLogger(__name__)
+
+# Local SQLite Memory Fallback (Air-Gapped & Resilient)
+LOCAL_DB_PATH = os.path.join(os.path.dirname(__file__), "..", "db", "local_memory.db")
+
+def _init_local_db():
+    try:
+        os.makedirs(os.path.dirname(LOCAL_DB_PATH), exist_ok=True)
+        with sqlite3.connect(LOCAL_DB_PATH) as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS local_memories (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    content TEXT NOT NULL,
+                    tags TEXT,
+                    source TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS local_preferences (
+                    key TEXT PRIMARY KEY,
+                    value TEXT NOT NULL,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+    except Exception as e:
+        log.warning(f"Local SQLite init warning: {e}")
+
+_init_local_db()
+
+def _local_store_memory(content: str, source: str = "conversation", tags: Optional[list[str]] = None) -> Optional[str]:
+    try:
+        with sqlite3.connect(LOCAL_DB_PATH) as conn:
+            cur = conn.cursor()
+            cur.execute(
+                "INSERT INTO local_memories (content, tags, source) VALUES (?, ?, ?)",
+                (content, json.dumps(tags or []), source)
+            )
+            return str(cur.lastrowid)
+    except Exception as e:
+        log.error(f"Local memory store error: {e}")
+        return None
+
+def _local_retrieve_memories(query: str, k: int = 5) -> list[str]:
+    try:
+        with sqlite3.connect(LOCAL_DB_PATH) as conn:
+            cur = conn.cursor()
+            # Simple keyword matching + recency
+            words = [w.lower() for w in query.split() if len(w) > 3]
+            if words:
+                clause = " OR ".join(["content LIKE ?" for _ in words])
+                params = [f"%{w}%" for w in words]
+                cur.execute(f"SELECT content FROM local_memories WHERE {clause} ORDER BY id DESC LIMIT ?", (*params, k))
+                matches = [row[0] for row in cur.fetchall()]
+                if matches:
+                    return matches
+            # Fallback to most recent
+            cur.execute("SELECT content FROM local_memories ORDER BY id DESC LIMIT ?", (k,))
+            return [row[0] for row in cur.fetchall()]
+    except Exception as e:
+        log.warning(f"Local memory retrieval warning: {e}")
+        return []
+
+def _local_save_preference(key: str, value: str) -> bool:
+    try:
+        with sqlite3.connect(LOCAL_DB_PATH) as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO local_preferences (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
+                (key, value)
+            )
+            return True
+    except Exception:
+        return False
+
+def _local_get_preference(key: str) -> Optional[str]:
+    try:
+        with sqlite3.connect(LOCAL_DB_PATH) as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT value FROM local_preferences WHERE key = ?", (key,))
+            row = cur.fetchone()
+            return row[0] if row else None
+    except Exception:
+        return None
 
 # ─────────────────────────────────────────────────────────────
 # Embedding model — loaded once at module import, cached for life of process
@@ -92,7 +176,8 @@ def store_memory(
             return memory_id
 
     except Exception as e:
-        log.error(f"Failed to store memory: {e}")
+        log.warning(f"Supabase unavailable ({e}), storing to local memory vault...")
+        return _local_store_memory(content, source, tags)
 
     return None
 
@@ -197,8 +282,8 @@ def retrieve_relevant_memories(
         return memories[:k]
 
     except Exception as e:
-        log.warning(f"Memory retrieval failed (non-fatal): {e}")
-        return []
+        log.info(f"Supabase offline ({e}) — retrieving from local memory vault...")
+        return _local_retrieve_memories(query, k)
 
 
 def _get_recent_memories(limit: int, exclude_ids: list[str] = None) -> list[str]:
@@ -257,8 +342,8 @@ def save_preference(key: str, value: str) -> bool:
         log.info(f"Preference saved: {key} = {value}")
         return True
     except Exception as e:
-        log.error(f"Failed to save preference: {e}")
-        return False
+        log.warning(f"Supabase unavailable ({e}), saving preference locally...")
+        return _local_save_preference(key, value)
 
 
 def get_preference(key: str) -> Optional[str]:
@@ -272,5 +357,6 @@ def get_preference(key: str) -> Optional[str]:
         if result.data:
             return result.data[0]["value"]
     except Exception as e:
-        log.warning(f"Failed to get preference '{key}': {e}")
+        log.warning(f"Supabase unavailable ({e}), getting preference locally...")
+        return _local_get_preference(key)
     return None

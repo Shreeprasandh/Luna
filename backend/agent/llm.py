@@ -17,7 +17,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 
 from tools.registry import TOOL_SCHEMAS
 
-load_dotenv()
+load_dotenv(override=True)
 log = logging.getLogger(__name__)
 
 
@@ -70,9 +70,9 @@ def _call_gemini(messages: list[dict], max_tokens: int, tools: list[dict] | None
     import google.generativeai as genai
     genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-    # Use gemini-2.0-flash-lite for fast lightweight 1B/2B parameter inference on Gemini
+    # Use gemini-3.5-flash-lite for fast lightweight inference on Gemini
     model = genai.GenerativeModel(
-        model_name=os.getenv("GEMINI_MODEL", "gemini-2.0-flash-lite"),
+        model_name=os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite"),
         generation_config=genai.GenerationConfig(max_output_tokens=max_tokens),
     )
 
@@ -160,13 +160,13 @@ def chat(
         }
 
     HOW_ARE_YOU = {"how are you", "how are you doing", "hows it going", "how is it going", "whats up", "what is up"}
-    if last_clean in HOW_ARE_YOU or "how are you" in last_clean:
+    if last_clean in HOW_ARE_YOU:
         return {
             "type": "text",
             "content": "I am doing exceptionally well, Sir! All core systems are 100% operational and ready. How may I assist you today?"
         }
 
-    if "status" in last_clean or "are you ready" in last_clean:
+    if last_clean in {"status", "are you ready", "system status", "health check", "ping"}:
         return {
             "type": "text",
             "content": "Sir, all 128 autonomous tools and desktop systems are 100% operational and ready."
@@ -178,32 +178,38 @@ def chat(
             "content": "You are very welcome, Sir! Always at your service."
         }
 
-    # Tier 1 — Groq
-    try:
-        log.debug("LLM: trying Groq")
-        res = _try_groq(messages, limit, tools_def)
-        return res
-    except Exception as e:
-        log.warning(f"Groq failed: {e}")
-        errors.append(f"Groq: {e}")
+    primary_provider = os.getenv("LLM_PROVIDER", "groq").lower()
 
-    # Tier 2 — Gemini
-    try:
-        log.debug("LLM: falling back to Gemini")
-        res = _call_gemini(messages, limit, tools_def)
-        return res
-    except Exception as e:
-        log.warning(f"Gemini failed: {e}")
-        errors.append(f"Gemini: {e}")
+    # Dynamic Provider Ordering based on LLM_PROVIDER
+    providers = ["gemini", "groq", "ollama"] if primary_provider == "gemini" else ["groq", "gemini", "ollama"]
 
-    # Tier 3 — Ollama / Local Fallback
-    try:
-        log.debug("LLM: falling back to local Ollama")
-        res = _call_ollama(messages, limit, tools_def)
-        return res
-    except Exception as e:
-        log.warning(f"Ollama local fallback skipped/failed: {e}")
-        errors.append(f"Ollama: {e}")
+    for provider in providers:
+        if provider == "gemini":
+            try:
+                log.debug("LLM: trying Gemini")
+                res = _call_gemini(messages, limit, tools_def)
+                return res
+            except Exception as e:
+                log.warning(f"Gemini failed: {e}")
+                errors.append(f"Gemini: {e}")
+
+        elif provider == "groq":
+            try:
+                log.debug("LLM: trying Groq")
+                res = _try_groq(messages, limit, tools_def)
+                return res
+            except Exception as e:
+                log.warning(f"Groq failed: {e}")
+                errors.append(f"Groq: {e}")
+
+        elif provider == "ollama":
+            try:
+                log.debug("LLM: trying Ollama")
+                res = _call_ollama(messages, limit, tools_def)
+                return res
+            except Exception as e:
+                log.warning(f"Ollama failed: {e}")
+                errors.append(f"Ollama: {e}")
 
     # Ultimate Safety Fallback — Graceful Token Exhaustion & Outage Handler
     log.error(f"All LLM providers exhausted or unavailable: {errors}")

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   Sliders, 
@@ -133,6 +133,32 @@ export const SkillMatrix: React.FC<SkillMatrixProps> = ({
   const [witLevel, setWitLevel] = useState(30);
   const [brevityLevel, setBrevityLevel] = useState(85);
   const [rigorLevel, setRigorLevel] = useState(95);
+
+  // Fetch real skills from Antigravity CLI substrate
+  useEffect(() => {
+    if (!isOpen) return;
+    const fetchSkills = async () => {
+      try {
+        const host = typeof window !== "undefined" ? window.location.hostname || "localhost" : "localhost";
+        const res = await fetch(`http://${host}:8000/cli/skills`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.skills && Array.isArray(data.skills) && data.skills.length > 0) {
+            setSkills(data.skills.map((s: any) => ({
+              name: s.name,
+              category: s.category || "engineering",
+              description: s.description || "Autonomous agent skill module.",
+              active: true,
+              model: "Antigravity Active Substrate"
+            })));
+          }
+        }
+      } catch (e) {
+        console.warn("Using cached skills:", e);
+      }
+    };
+    fetchSkills();
+  }, [isOpen]);
 
   const toggleSkill = (name: string) => {
     setSkills(prev =>
