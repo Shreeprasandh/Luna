@@ -30,6 +30,7 @@ logging.basicConfig(
     level=logging.WARNING if os.getenv("ENVIRONMENT") == "production" else logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
+log = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Luna",

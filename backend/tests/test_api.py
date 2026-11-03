@@ -48,6 +48,15 @@ def test_chat_invalid_session():
     assert res.status_code == 404
 
 
+def test_chat_exception_fallback():
+    from unittest.mock import patch
+    with patch("main.process_message", side_effect=Exception("Simulated unexpected failure")):
+        response = client.post("/chat", json={"session_id": "test-session", "text": "hello"})
+        assert response.status_code == 200
+        data = response.json()
+        assert "temporary network glitch" in data["text"]
+
+
 def test_system_health_tool():
     from tools.system import get_system_health
     res = get_system_health()
